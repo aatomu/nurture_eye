@@ -102,6 +102,11 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 
 	//表示
 	log.Print("Guild:\"" + guild + "\"  Channel:\"" + channel.Name + "\"  " + author + ": " + message)
+
+	//bot return
+	if m.Author.Bot {
+		return
+	}
 	switch {
 	//分岐
 	case prefixCheck(message, "give "):
@@ -209,10 +214,10 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		rand.Seed(time.Now().UnixNano())
 		shouldDead = rand.Intn(100) + 1
 	}
-	if shouldDead >= deadPercentage && hp >= 1 {
+	if shouldDead <= deadPercentage && hp >= 1 {
 		state = "アイは食べ過ぎで死んでしまった!"
 	}
-	if shouldDead < deadPercentage {
+	if shouldDead > deadPercentage {
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
@@ -342,7 +347,9 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	embed := "<@" + userID + "> のアイは冒険に出た\n" +
 		"<@" + userID + ">のアイ HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " 攻撃力:" + strconv.Itoa(strength) + "\n"
 	if !strings.Contains(enemyID, "MC:") {
-		embed = embed + "<@" + enemyID + ">のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
+		userData, _ := discord.User(enemyID)
+		userName := userData.Username
+		embed = embed + "@" + userName + "のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
 	} else {
 		embed = embed + enemyID + "のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
 	}
