@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
@@ -21,6 +22,7 @@ var (
 	prefix   = flag.String("prefix", "", "call prefix")
 	token    = flag.String("token", "", "bot token")
 	clientID = ""
+	write    sync.Mutex
 )
 
 func main() {
@@ -98,7 +100,7 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 
 	//表示
 	log.Print("Guild:\"" + guild + "\"  Channel:\"" + channel.Name + "\"  " + author + ": " + message)
-
+	write.Lock()
 	switch {
 	//分岐
 	case prefixCheck(message, "give "):
@@ -123,6 +125,7 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 		sendHelp(discord, channelID)
 		return
 	}
+	write.Unlock()
 }
 
 func prefixCheck(message, check string) bool {
