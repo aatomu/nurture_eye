@@ -58,7 +58,7 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMmJJ,` `` ` ` `` `  ` ` ` `` ```` `.JJJMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM+JJJJ` ` `` ` `` ``(JJJJMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 -->
 # nurture_eye
-開発環境:rpi4(8gb) golang(go1.11.6 linux/arm64)  
+開発環境:rpi4(8gb) golang(go1.16.7 linux/arm64)  
   
 ## -起動-  
 ```go run main.go -prefix=<prefix> -token=<bot token>```

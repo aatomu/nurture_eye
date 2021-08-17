@@ -78,13 +78,8 @@ func onReady(discord *discordgo.Session, r *discordgo.Ready) {
 func botStateUpdate(discord *discordgo.Session) {
 	//botのステータスアップデート
 	joinedServer := len(discord.State.Guilds)
-	joinedVC := len(sessions)
-	VC := ""
-	if joinedVC != 0 {
-		VC = " " + strconv.Itoa(joinedVC) + "鯖でお話し中"
-	}
-	state := *prefix + " help | " + strconv.Itoa(joinedServer) + "鯖で稼働中" + VC
-	discord.UpdateStatus(0, state)
+	state := *prefix + " help | " + strconv.Itoa(joinedServer) + "鯖にいるよ!"
+	discord.UpdateGameStatus(0, state)
 }
 
 //メッセージが送られたときにCall
@@ -95,10 +90,10 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	guild := guildData.Name
 	channelID := m.ChannelID
 	channel, _ := discord.Channel(channelID)
-	messageID := m.ID
+	//	messageID := m.ID
 	message := m.Content
 	author := m.Author.Username
-	authorID := m.Author.ID
+	//	authorID := m.Author.ID
 
 	//表示
 	log.Print("Guild:\"" + guild + "\"  Channel:\"" + channel.Name + "\"  " + author + ": " + message)
@@ -132,7 +127,7 @@ func sendHelp(discord *discordgo.Session, channelID string) {
 	Text := "--TTS--\n" +
 		*prefix + " give : 自分のアイにご飯を上げます\n" +
 		*prefix + " state : 自分のアイのステータスを確認します\n" +
-		*prefix + " adventure` : ランダムなplayerに勝負をかけます\n"
+		*prefix + " adventure : ランダムなplayerに勝負をかけます\n"
 	embed.Description = Text
 	//送信
 	if _, err := discord.ChannelMessageSendEmbed(channelID, embed); err != nil {
