@@ -149,7 +149,6 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	for _, line := range strings.Split(text, "\n") {
 		if strings.Contains(line, "UserID:"+userID) {
 			fmt.Sscanf(line, "UserID:"+userID+" Food 1:%s 2:%s 3:%s 4:%s 5:%s HP:%d SP:%d Strength:%d Temper:%s Count:%d", &food[1], &food[2], &food[3], &food[4], &food[0], &hp, &sp, &strength, &temper, &count)
-			break
 		}
 		if line != "" {
 			writeText = writeText + line + "\n"
@@ -196,10 +195,10 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	//退化確認
 	userdata := ""
 	count++
-	if count == 10 && hp >= 1 {
+	if count == 20 && hp >= 1 {
 		state = "アイは食べ過ぎで死んでしまった!"
 	}
-	if count != 10 {
+	if count != 20 {
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
