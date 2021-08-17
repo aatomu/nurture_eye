@@ -150,7 +150,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		if strings.Contains(line, "UserID:"+userID) {
 			fmt.Sscanf(line, "UserID:"+userID+" Food 1:%s 2:%s 3:%s 4:%s 5:%s HP:%d SP:%d Strength:%d Temper:%s Count:%d", &food[1], &food[2], &food[3], &food[4], &food[0], &hp, &sp, &strength, &temper, &count)
 		}
-		if line != "" {
+		if line != "" && !strings.Contains(line, "UserID:"+userID) {
 			writeText = writeText + line + "\n"
 		}
 	}
