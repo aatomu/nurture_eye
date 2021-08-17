@@ -314,12 +314,13 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	}
 
 	//宣言
-	embed := "<@!" + userID + "> のアイは冒険に出た!\n" +
-		"アイは <@!" + enemyID + ">のアイに勝負を仕掛けた\n" +
-		"<@!" + userID + ">のアイ HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " 攻撃力:" + strconv.Itoa(strength) + "\n" +
-		"<@!" + enemyID + ">のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength)
-	//表示名修正
-	embed = strings.Replace(embed, "<@!001>", "深淵様", -1)
+	embed := "<@!" + userID + "> のアイは冒険に出た\n" +
+		"<@!" + userID + ">のアイ HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " 攻撃力:" + strconv.Itoa(strength) + "\n"
+	if !strings.Contains(enemyID, "MC:") {
+		embed = embed + "<@!" + enemyID + ">のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
+	} else {
+		embed = embed + enemyID + "のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
+	}
 	sendEmbed(discord, channelID, embed)
 
 	//対決
