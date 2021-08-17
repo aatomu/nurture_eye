@@ -19,10 +19,11 @@ import (
 
 var (
 	//変数定義
-	prefix   = flag.String("prefix", "", "call prefix")
-	token    = flag.String("token", "", "bot token")
-	clientID = ""
-	write    sync.Mutex
+	prefix    = flag.String("prefix", "", "call prefix")
+	token     = flag.String("token", "", "bot token")
+	clientID  = ""
+	write     sync.Mutex
+	foodLimit = 15
 )
 
 func main() {
@@ -170,7 +171,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		state = state + "HPが" + strconv.Itoa(hp) + "になった"
 		if hp < 1 {
 			state = state + "\n死んでしまった"
-			count = 9
+			count = foodLimit - 1
 		}
 		break
 	case stateUp == 1:
@@ -196,10 +197,10 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	//退化確認
 	userdata := ""
 	count++
-	if count == 15 && hp >= 1 {
+	if count == foodLimit && hp >= 1 {
 		state = "アイは食べ過ぎで死んでしまった!"
 	}
-	if count != 15 {
+	if count != foodLimit {
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
