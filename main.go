@@ -110,9 +110,9 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	case prefixCheck(message, "state"):
 		sendState(authorID, message, discord, channelID)
 		return
-	case prefixCheck(message, "adventure "):
-	case prefixCheck(message, "adv "):
-		goAdventure(authorID)
+	case prefixCheck(message, "adventure"):
+	case prefixCheck(message, "adv"):
+		goAdventure(authorID, discord, channelID)
 		return
 	case prefixCheck(message, "help"):
 		sendHelp(discord, channelID)
@@ -136,8 +136,8 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	writeText := ""
 	food := [5]string{"TUSB", "TUSB", "TUSB", "TUSB", "TUSB"}
 	hp := 1
-	sp := 0
-	strength := 0
+	sp := 1
+	strength := 1
 	temper := ""
 	count := 0
 	//探索
@@ -201,8 +201,8 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		food[3] = ""
 		food[4] = ""
 		hp = 1
-		sp = 0
-		strength = 0
+		sp = 1
+		strength = 1
 		temper = ""
 		count = 0
 	} else {
@@ -230,8 +230,8 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 	//代入先
 	food := [5]string{}
 	hp := 1
-	sp := 0
-	strength := 0
+	sp := 1
+	strength := 1
 	temper := ""
 	count := 0
 
@@ -276,9 +276,101 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 	sendEmbed(discord, channelID, embed)
 }
 
-func goAdventure(userID string) {
+func goAdventure(userID string, discord *discordgo.Session, channelID string) {
+	fileName := "./UserAi.txt"
+	//データ一覧入手
+	text, err := readFile(fileName)
+	if err != nil {
+		log.Println(err)
+	}
 
+	//代入先
+	enemyID := ""
+	enemyHp := 1
+	enemySp := 1
+	enemyStrength := 1
+	//書き込みとかよう
+	writeText := ""
+	food := [5]string{"TUSB", "TUSB", "TUSB", "TUSB", "TUSB"}
+	hp := 1
+	sp := 1
+	strength := 1
+	temper := ""
+	count := 0
+	//敵指定
+	rand.Seed(time.Now().UnixNano())
+	lines := strings.Count(text, "\n")
+	enemyLine := rand.Intn(lines + 1)
+	counter := 0
+
+	//探索
+	for _, line := range strings.Split(text, "\n") {
+		if counter == enemyLine {
+			blank := ""
+			fmt.Sscanf(line, "UserID:%s Food 1:%s 2:%s 3:%s 4:%s 5:%s HP:%d SP:%d Strength:%d Temper: Count:", &enemyID, &blank, &blank, &blank, &blank, &blank, &enemyHp, &enemySp, &enemyStrength)
+		}
+		if strings.Contains(line, "UserID:"+userID) {
+			fmt.Sscanf(line, "UserID:"+userID+" Food 1:%s 2:%s 3:%s 4:%s 5:%s HP:%d SP:%d Strength:%d Temper:%s Count:%d", &food[0], &food[1], &food[2], &food[3], &food[4], &hp, &sp, &strength, &temper, &count)
+		}
+		counter++
+		if line != "" && !strings.Contains(line, "UserID:"+userID) {
+			writeText = writeText + line + "\n"
+		}
+	}
+
+	//宣言
+	embed := "<@!" + userID + "> のアイは冒険に出た!\n" +
+		"アイは <@!" + enemyID + ">のアイに勝負を仕掛けた\n" +
+		"<@!" + enemyID + ">のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength)
+	sendEmbed(discord, channelID, embed)
+
+	//対決
+	var isWin bool
+	embed = ""
+	for {
+		//自分攻撃
+		if sp >= 1 {
+			rand.Seed(time.Now().UnixNano())
+			damage := rand.Intn(3) * strength
+			enemyHp = enemyHp - damage
+			embed = embed + "自分ターン: " + strconv.Itoa(damage) + "damage 相手HP:" + strconv.Itoa(enemyHp) + "\n"
+			if enemyHp <= 0 {
+				embed = embed + "勝負に勝った\n自分のアイのステータスが上がった!\n自分のアイのおなかがすいたようだ"
+				isWin = true
+				break
+			}
+			sp = sp - 1
+		}
+		//敵攻撃
+		if enemySp >= 1 {
+			hp = hp - enemyStrength
+			embed = embed + "相手ターン: " + strconv.Itoa(enemyStrength) + "damage 自分HP:" + strconv.Itoa(hp) + "\n"
+			if hp <= 0 {
+				embed = embed + "自分のアイは死んでしまった"
+				isWin = false
+				break
+			}
+			enemySp = enemySp - 1
+		}
+	}
+	sendEmbed(discord, channelID, embed)
+
+	userdata := ""
+	if isWin {
+		count = 0
+		rand.Seed(time.Now().UnixNano())
+		hp = hp + rand.Intn(10)
+		sp = sp + rand.Intn(3)
+		strength = strength + rand.Intn(5)
+		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
+	}
+	//最終書き込み内容
+	writeText = writeText + userdata
+
+	//書き込み
+	err = ioutil.WriteFile(fileName, []byte(writeText), 0777)
 }
+
 func sendHelp(discord *discordgo.Session, channelID string) {
 	text := "Bot Help\n" +
 		*prefix + " give <単語> : 自分のアイにご飯を上げます\n" +
