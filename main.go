@@ -222,7 +222,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	writeFile(fileName, writeText)
 
 	//結果表示
-	embed := "<@!" + userID + ">はアイにご飯を上げた!\n" + state
+	embed := "<@" + userID + ">はアイにご飯を上げた!\n" + state
 	sendEmbed(discord, channelID, embed)
 }
 
@@ -247,9 +247,11 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 	count := 0
 
 	//userID
-	if strings.Contains(message, *prefix+" state <@!") || strings.Contains(message, *prefix+" st <@!") {
+	if strings.Contains(message, *prefix+" state <@!") || strings.Contains(message, *prefix+" state <@") || strings.Contains(message, *prefix+" st <@!") || strings.Contains(message, *prefix+" st <@") {
 		otherID := strings.Replace(message, *prefix+" state <@!", "", -1)
+		otherID = strings.Replace(otherID, *prefix+" state <@", "", -1)
 		otherID = strings.Replace(otherID, *prefix+" st <@!", "", -1)
+		otherID = strings.Replace(otherID, *prefix+" st <@", "", -1)
 		otherID = strings.Replace(otherID, ">", "", -1)
 		if otherID != "" {
 			userID = otherID
@@ -273,7 +275,7 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 			attribute = 0
 		}
 		attributeArray := [5]string{"水", "火", "木", "光", "闇"}
-		embed = "<@!" + userID + ">のアイのステータス\n" +
+		embed = "<@" + userID + ">のアイのステータス\n" +
 			"Food:\n" +
 			"1." + food[0] + "\n" +
 			"2." + food[1] + "\n" +
@@ -285,7 +287,7 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 			"味: たぶん" + food[meet] + "味\n" +
 			"属性:" + attributeArray[attribute]
 	} else {
-		embed = "<@!" + userID + ">のアイのステータスはなかったよ?"
+		embed = "<@" + userID + ">のアイのステータスはなかったよ?"
 	}
 	sendEmbed(discord, channelID, embed)
 }
@@ -337,10 +339,10 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	}
 
 	//宣言
-	embed := "<@!" + userID + "> のアイは冒険に出た\n" +
-		"<@!" + userID + ">のアイ HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " 攻撃力:" + strconv.Itoa(strength) + "\n"
+	embed := "<@" + userID + "> のアイは冒険に出た\n" +
+		"<@" + userID + ">のアイ HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " 攻撃力:" + strconv.Itoa(strength) + "\n"
 	if !strings.Contains(enemyID, "MC:") {
-		embed = embed + "<@!" + enemyID + ">のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
+		embed = embed + "<@" + enemyID + ">のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
 	} else {
 		embed = embed + enemyID + "のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength) + " に勝負を仕掛けた!"
 	}
