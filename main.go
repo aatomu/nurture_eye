@@ -100,7 +100,6 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 
 	//表示
 	log.Print("Guild:\"" + guild + "\"  Channel:\"" + channel.Name + "\"  " + author + ": " + message)
-	write.Lock()
 	switch {
 	//分岐
 	case prefixCheck(message, "give "):
@@ -125,7 +124,6 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 		sendHelp(discord, channelID)
 		return
 	}
-	write.Unlock()
 }
 
 func prefixCheck(message, check string) bool {
@@ -208,7 +206,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	writeText = writeText + userdata + "\n"
 
 	//書き込み
-	err = ioutil.WriteFile(fileName, []byte(writeText), 0777)
+	writeFile(fileName, writeText)
 
 	//結果表示
 	embed := "<@!" + userID + ">はアイにご飯を上げた!\n" + state
@@ -373,7 +371,7 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	writeText = writeText + userdata + "\n"
 
 	//書き込み
-	err = ioutil.WriteFile(fileName, []byte(writeText), 0777)
+	writeFile(fileName, writeText)
 }
 
 func sendHelp(discord *discordgo.Session, channelID string) {
@@ -434,4 +432,15 @@ func readFile(filePath string) (text string, returnErr error) {
 	//[]byteをstringに
 	text = string(byteText)
 	return
+}
+
+//ファイル書き込み
+func writeFile(filePath string, writeText string) {
+	write.Lock()
+	//書き込み
+	err := ioutil.WriteFile(filePath, []byte(writeText), 0777)
+	if err != nil {
+		log.Println(err)
+	}
+	write.Unlock()
 }
