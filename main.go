@@ -19,11 +19,12 @@ import (
 
 var (
 	//変数定義
-	prefix    = flag.String("prefix", "", "call prefix")
-	token     = flag.String("token", "", "bot token")
-	clientID  = ""
-	write     sync.Mutex
-	foodLimit = 15
+	prefix           = flag.String("prefix", "", "call prefix")
+	token            = flag.String("token", "", "bot token")
+	clientID         = ""
+	file             sync.Mutex
+	canDeadByAteFood = 15
+	deadPercentage   = 50
 )
 
 func main() {
@@ -132,6 +133,10 @@ func prefixCheck(message, check string) bool {
 }
 
 func giveFood(userID string, message string, discord *discordgo.Session, channelID string) {
+	//並列処理対策
+	file.Lock()
+	defer file.Unlock()
+
 	fileName := "./UserAi.txt"
 	//データ一覧入手
 	text, err := readFile(fileName)
@@ -164,17 +169,18 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	state := "アイは\"" + food[0] + "\"を食べた\n"
 	rand.Seed(time.Now().UnixNano())
 	stateUp := rand.Intn(3)
-	up := rand.Intn(21) - 5
 	switch {
 	case stateUp == 0:
+		up := rand.Intn(21) - 5
 		hp = hp + up
 		state = state + "HPが" + strconv.Itoa(hp) + "になった"
 		if hp < 1 {
 			state = state + "\n死んでしまった"
-			count = foodLimit - 1
+			count = canDeadByAteFood - 1
 		}
 		break
 	case stateUp == 1:
+		up := rand.Intn(6) - 3
 		sp = sp + up
 		if sp <= 0 {
 			sp = 1
@@ -182,6 +188,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		state = state + "SPが" + strconv.Itoa(sp) + "になった"
 		break
 	case stateUp == 2:
+		up := rand.Intn(21) - 5
 		strength = strength + up
 		if strength <= 0 {
 			strength = 1
@@ -196,11 +203,16 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 
 	//退化確認
 	userdata := ""
+	shouldDead := 0
 	count++
-	if count == foodLimit && hp >= 1 {
+	if count >= canDeadByAteFood {
+		rand.Seed(time.Now().UnixNano())
+		shouldDead = rand.Intn(100) + 1
+	}
+	if shouldDead >= deadPercentage && hp >= 1 {
 		state = "アイは食べ過ぎで死んでしまった!"
 	}
-	if count != foodLimit {
+	if shouldDead < deadPercentage {
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
@@ -215,6 +227,10 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 }
 
 func sendState(userID string, message string, discord *discordgo.Session, channelID string) {
+	//並列処理対策
+	file.Lock()
+	defer file.Unlock()
+
 	fileName := "./UserAi.txt"
 	//データ一覧入手
 	text, err := readFile(fileName)
@@ -275,6 +291,10 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 }
 
 func goAdventure(userID string, discord *discordgo.Session, channelID string) {
+	//並列処理対策
+	file.Lock()
+	defer file.Unlock()
+
 	fileName := "./UserAi.txt"
 	//データ一覧入手
 	text, err := readFile(fileName)
@@ -440,11 +460,9 @@ func readFile(filePath string) (text string, returnErr error) {
 
 //ファイル書き込み
 func writeFile(filePath string, writeText string) {
-	write.Lock()
 	//書き込み
 	err := ioutil.WriteFile(filePath, []byte(writeText), 0777)
 	if err != nil {
 		log.Println(err)
 	}
-	write.Unlock()
 }
