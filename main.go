@@ -110,7 +110,12 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	case prefixCheck(message, "state"):
 		sendState(authorID, message, discord, channelID)
 		return
+	case prefixCheck(message, "st"):
+		sendState(authorID, message, discord, channelID)
+		return
 	case prefixCheck(message, "adventure"):
+		goAdventure(authorID, discord, channelID)
+		return
 	case prefixCheck(message, "adv"):
 		goAdventure(authorID, discord, channelID)
 		return
@@ -138,7 +143,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	hp := 1
 	sp := 1
 	strength := 1
-	temper := ""
+	temper := "くさ"
 	count := 0
 	//探索
 	for _, line := range strings.Split(text, "\n") {
@@ -170,15 +175,15 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		break
 	case stateUp == 1:
 		sp = sp + up
-		if sp < 0 {
-			sp = 0
+		if sp <= 0 {
+			sp = 1
 		}
 		state = state + "SPが" + strconv.Itoa(sp) + "になった"
 		break
 	case stateUp == 2:
 		strength = strength + up
-		if strength < 0 {
-			strength = 0
+		if strength <= 0 {
+			strength = 1
 		}
 		state = state + "攻撃力が" + strconv.Itoa(strength) + "になった"
 		break
@@ -191,25 +196,14 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	//退化確認
 	userdata := ""
 	count++
-	if count == 10 {
-		if hp >= 1 {
-			state = "アイは食べ過ぎで死んでしまった!"
-		}
-		food[0] = ""
-		food[1] = ""
-		food[2] = ""
-		food[3] = ""
-		food[4] = ""
-		hp = 1
-		sp = 1
-		strength = 1
-		temper = ""
-		count = 0
-	} else {
+	if count == 10 && hp >= 1 {
+		state = "アイは食べ過ぎで死んでしまった!"
+	}
+	if count != 10 {
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
-	writeText = writeText + userdata
+	writeText = writeText + userdata + "\n"
 
 	//書き込み
 	err = ioutil.WriteFile(fileName, []byte(writeText), 0777)
@@ -232,12 +226,13 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 	hp := 1
 	sp := 1
 	strength := 1
-	temper := ""
+	temper := "くさ"
 	count := 0
 
 	//userID
-	if strings.Contains(message, *prefix+" state <@!") {
+	if strings.Contains(message, *prefix+" state <@!") || strings.Contains(message, *prefix+" st <@!") {
 		otherID := strings.Replace(message, *prefix+" state <@!", "", -1)
+		otherID = strings.Replace(otherID, *prefix+" st <@!", "", -1)
 		otherID = strings.Replace(otherID, ">", "", -1)
 		if otherID != "" {
 			userID = otherID
@@ -295,12 +290,12 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	hp := 1
 	sp := 1
 	strength := 1
-	temper := ""
+	temper := "くさ"
 	count := 0
 	//敵指定
 	rand.Seed(time.Now().UnixNano())
 	lines := strings.Count(text, "\n")
-	enemyLine := rand.Intn(lines + 1)
+	enemyLine := rand.Intn(lines - 1)
 	counter := 0
 
 	//探索
@@ -321,7 +316,10 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	//宣言
 	embed := "<@!" + userID + "> のアイは冒険に出た!\n" +
 		"アイは <@!" + enemyID + ">のアイに勝負を仕掛けた\n" +
+		"<@!" + userID + ">のアイ HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " 攻撃力:" + strconv.Itoa(strength) + "\n" +
 		"<@!" + enemyID + ">のアイ HP:" + strconv.Itoa(enemyHp) + " SP:" + strconv.Itoa(enemySp) + " 攻撃力:" + strconv.Itoa(enemyStrength)
+	//表示名修正
+	embed = strings.Replace(embed, "<@!001>", "深淵様", -1)
 	sendEmbed(discord, channelID, embed)
 
 	//対決
@@ -352,6 +350,11 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 			}
 			enemySp = enemySp - 1
 		}
+		if sp == 0 && enemySp == 0 {
+			embed = embed + "相手のSPが切れて逃げた"
+			isWin = true
+			break
+		}
 	}
 	sendEmbed(discord, channelID, embed)
 
@@ -365,7 +368,7 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
-	writeText = writeText + userdata
+	writeText = writeText + userdata + "\n"
 
 	//書き込み
 	err = ioutil.WriteFile(fileName, []byte(writeText), 0777)
