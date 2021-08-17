@@ -252,6 +252,9 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 		rand.Seed(time.Now().UnixNano())
 		meet := rand.Intn(4)
 		attribute := hp % 5
+		if attribute <= 0 {
+			attribute = 0
+		}
 		attributeArray := [5]string{"水", "火", "木", "光", "闇"}
 		embed = "<@!" + userID + ">のアイのステータス\n" +
 			"Food:\n" +
