@@ -24,7 +24,7 @@ var (
 	clientID         = ""
 	file             sync.Mutex
 	canDeadByAteFood = 15
-	deadPercentage   = 20
+	randomPercentage = 30
 	critStateUp      = 2
 )
 
@@ -194,7 +194,8 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	stateUp := rand.Intn(3)
 	up := rand.Intn(20) - 5
 	//涙目のとき増幅率をn倍
-	if count+1 >= canDeadByAteFood {
+	if count+1 >= canDeadByAteFood && rand.Intn(100) <= randomPercentage {
+		state = state + "なにか強くなりそうだ\n"
 		up = up * critStateUp
 	}
 	switch {
@@ -223,7 +224,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		break
 	}
 	//性格変更
-	changeTemper := rand.Intn(7)
+	changeTemper := rand.Intn(8)
 	arr := [8]string{"主のことが好きのようだ", "????", "主のことが嫌いのようだ", "引きこもろうとしている", "何か恐れている", "????", "繧九↑縺｡繝ｼ", "お仕事が好き"}
 	temper = arr[changeTemper]
 
@@ -235,10 +236,10 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		rand.Seed(time.Now().UnixNano())
 		shouldLive = rand.Intn(100) + 1
 	}
-	if shouldLive <= deadPercentage && hp >= 1 {
+	if shouldLive <= randomPercentage && hp >= 1 {
 		state = "アイは食べ過ぎで死んでしまった!"
 	}
-	if shouldLive > deadPercentage && count > 0 {
+	if shouldLive > randomPercentage && count > 0 {
 		if count >= canDeadByAteFood {
 			state = state + "**涙目になっている...**\n"
 		}
@@ -419,9 +420,9 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	if isWin {
 		count = 0
 		rand.Seed(time.Now().UnixNano())
-		hp = hp + rand.Intn(10)
-		sp = sp + rand.Intn(3)
-		strength = strength + rand.Intn(5)
+		hp = hp + rand.Intn(20)
+		sp = sp + rand.Intn(5)
+		strength = strength + rand.Intn(15)
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
