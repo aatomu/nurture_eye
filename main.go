@@ -477,7 +477,6 @@ func sendEmbed(discord *discordgo.Session, channelID string, text string) {
 	if err != nil {
 		log.Println(err)
 	}
-
 }
 
 //リアクション追加用
