@@ -84,7 +84,7 @@ func onReady(discord *discordgo.Session, r *discordgo.Ready) {
 func botStateUpdate(discord *discordgo.Session) {
 	//botのステータスアップデート
 	joinedServer := len(discord.State.Guilds)
-	state := *prefix + " help | " + strconv.Itoa(joinedServer) + "鯖にいるよ!"
+	state := *prefix + " help | " + strconv.Itoa(joinedServer) + "鯖にいるよ! データは消えるもの!"
 	discord.UpdateGameStatus(0, state)
 }
 
