@@ -201,7 +201,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	switch {
 	case stateUp == 0:
 		hp = hp + up
-		state = state + "HPが" + strconv.Itoa(hp) + "になった\n"
+		state = state + "HPが" + strconv.Itoa(hp) + "(変化:" + strconv.Itoa(up) + ")になった\n"
 		if hp < 1 {
 			state = state + "死んでしまった\n"
 			count = -2
@@ -210,17 +210,19 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	case stateUp == 1:
 		up = up - 3
 		sp = sp + up
+		//マイナス対策
 		if sp <= 0 {
 			sp = 1
 		}
-		state = state + "SPが" + strconv.Itoa(sp) + "になった\n"
+		state = state + "SPが" + strconv.Itoa(sp) + "(変化:" + strconv.Itoa(up) + ")になった \n"
 		break
 	case stateUp == 2:
 		strength = strength + up
+		//マイナス対策
 		if strength <= 0 {
 			strength = 1
 		}
-		state = state + "攻撃力が" + strconv.Itoa(strength) + "になった\n"
+		state = state + "攻撃力が" + strconv.Itoa(strength) + "(変化:" + strconv.Itoa(up) + ")になった\n"
 		break
 	}
 	//性格変更
