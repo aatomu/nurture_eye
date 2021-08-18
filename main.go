@@ -194,7 +194,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	stateUp := rand.Intn(3)
 	up := rand.Intn(20) - 5
 	//涙目のとき増幅率をn倍
-	if count+1 >= canDeadByAteFood && rand.Intn(100) <= randomPercentage {
+	if count+1 >= canDeadByAteFood && rand.Intn(101) <= randomPercentage {
 		state = state + "なにか強くなりそうだ\n"
 		up = up * critStateUp
 	}
@@ -234,7 +234,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	count++
 	if count >= canDeadByAteFood {
 		rand.Seed(time.Now().UnixNano())
-		shouldLive = rand.Intn(100) + 1
+		shouldLive = rand.Intn(101)
 	}
 	if shouldLive <= randomPercentage && hp >= 1 {
 		state = "アイは食べ過ぎで死んでしまった!"
@@ -427,6 +427,17 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 		sp = sp + rand.Intn(5)
 		strength = strength + rand.Intn(15)
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
+	} else {
+		count = canDeadByAteFood
+		rand.Seed(time.Now().UnixNano())
+		//確率でステータス返却
+		if rand.Intn(101) <= randomPercentage {
+			hp = hp / 2
+			sp = sp / 2
+			strength = strength / 2
+			userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
+			embed = embed + "遺品を少し回収することができた\n"
+		}
 	}
 	//最終書き込み内容
 	writeText = writeText + userdata + "\n"
