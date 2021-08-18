@@ -383,11 +383,14 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	//対決
 	var isWin bool
 	embed = ""
+	dummyHp := hp
+	dummySp := sp
+	dummyStrength := strength
 	for {
 		//自分攻撃
-		if sp >= 1 {
+		if dummySp >= 1 {
 			rand.Seed(time.Now().UnixNano())
-			damage := rand.Intn(3) * strength
+			damage := rand.Intn(3) * dummyStrength
 			enemyHp = enemyHp - damage
 			embed = embed + "自分ターン: " + strconv.Itoa(damage) + "damage 相手HP:" + strconv.Itoa(enemyHp) + "\n"
 			if enemyHp <= 0 {
@@ -395,20 +398,20 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 				isWin = true
 				break
 			}
-			sp = sp - 1
+			dummySp = dummySp - 1
 		}
 		//敵攻撃
 		if enemySp >= 1 {
-			hp = hp - enemyStrength
+			dummyHp = dummyHp - enemyStrength
 			embed = embed + "相手ターン: " + strconv.Itoa(enemyStrength) + "damage 自分HP:" + strconv.Itoa(hp) + "\n"
-			if hp <= 0 {
+			if dummyHp <= 0 {
 				embed = embed + "自分のアイは死んでしまった"
 				isWin = false
 				break
 			}
 			enemySp = enemySp - 1
 		}
-		if sp == 0 && enemySp == 0 {
+		if dummySp == 0 && enemySp == 0 {
 			embed = embed + "相手のSPが切れて逃げた"
 			isWin = true
 			break
