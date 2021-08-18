@@ -176,7 +176,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	stateUp := rand.Intn(3)
 	switch {
 	case stateUp == 0:
-		up := rand.Intn(21) - 5
+		up := rand.Intn(15) - 5
 		hp = hp + up
 		state = state + "HPが" + strconv.Itoa(hp) + "になった"
 		if hp < 1 {
@@ -193,7 +193,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		state = state + "SPが" + strconv.Itoa(sp) + "になった"
 		break
 	case stateUp == 2:
-		up := rand.Intn(21) - 5
+		up := rand.Intn(11) - 4
 		strength = strength + up
 		if strength <= 0 {
 			strength = 1
