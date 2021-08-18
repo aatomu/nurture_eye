@@ -225,16 +225,16 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 
 	//退化確認
 	userdata := ""
-	shouldDead := 0
+	shouldLive := 100
 	count++
 	if count >= canDeadByAteFood {
 		rand.Seed(time.Now().UnixNano())
-		shouldDead = rand.Intn(100) + 1
+		shouldLive = rand.Intn(100) + 1
 	}
-	if shouldDead <= deadPercentage && hp >= 1 {
+	if shouldLive <= deadPercentage && hp >= 1 {
 		state = "アイは食べ過ぎで死んでしまった!"
 	}
-	if shouldDead > deadPercentage {
+	if shouldLive > deadPercentage {
 		userdata = "UserID:" + userID + " Food 1:" + food[0] + " 2:" + food[1] + " 3:" + food[2] + " 4:" + food[3] + " 5:" + food[4] + " HP:" + strconv.Itoa(hp) + " SP:" + strconv.Itoa(sp) + " Strength:" + strconv.Itoa(strength) + " Temper:" + temper + " Count:" + strconv.Itoa(count)
 	}
 	//最終書き込み内容
