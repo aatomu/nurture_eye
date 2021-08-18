@@ -107,34 +107,51 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.Bot {
 		return
 	}
+
 	switch {
 	//分岐
-	case prefixCheck(message, "give "):
-		giveFood(authorID, message, discord, channelID)
+	case isPrefix(message, "give "):
+		if isBotChannel(channel.Name) {
+			giveFood(authorID, message, discord, channelID)
+		}
 		return
-	case prefixCheck(message, "fd "):
-		giveFood(authorID, message, discord, channelID)
+	case isPrefix(message, "fd "):
+		if isBotChannel(channel.Name) {
+			giveFood(authorID, message, discord, channelID)
+		}
 		return
-	case prefixCheck(message, "state"):
-		sendState(authorID, message, discord, channelID)
+	case isPrefix(message, "state"):
+		if isBotChannel(channel.Name) {
+			sendState(authorID, message, discord, channelID)
+		}
 		return
-	case prefixCheck(message, "st"):
-		sendState(authorID, message, discord, channelID)
+	case isPrefix(message, "st"):
+		if isBotChannel(channel.Name) {
+			sendState(authorID, message, discord, channelID)
+		}
 		return
-	case prefixCheck(message, "adventure"):
-		goAdventure(authorID, discord, channelID)
+	case isPrefix(message, "adventure"):
+		if isBotChannel(channel.Name) {
+			goAdventure(authorID, discord, channelID)
+		}
 		return
-	case prefixCheck(message, "adv"):
-		goAdventure(authorID, discord, channelID)
+	case isPrefix(message, "adv"):
+		if isBotChannel(channel.Name) {
+			goAdventure(authorID, discord, channelID)
+		}
 		return
-	case prefixCheck(message, "help"):
+	case isPrefix(message, "help"):
 		sendHelp(discord, channelID)
 		return
 	}
 }
 
-func prefixCheck(message, check string) bool {
+func isPrefix(message, check string) bool {
 	return strings.HasPrefix(message, *prefix+" "+check)
+}
+
+func isBotChannel(channelName string) bool {
+	return strings.Contains(channelName, "アイ育成")
 }
 
 func giveFood(userID string, message string, discord *discordgo.Session, channelID string) {
@@ -411,7 +428,9 @@ func sendHelp(discord *discordgo.Session, channelID string) {
 	text := "Bot Help\n" +
 		*prefix + " give <単語> : 自分のアイにご飯を上げます\n" +
 		*prefix + " state : 自分のアイのステータスを確認します\n" +
-		*prefix + " adventure : ランダムなplayerに勝負をかけます\n"
+		*prefix + " adventure : ランダムなplayerに勝負をかけます\n" +
+		"*help以外のコマンドは\"アイ育成\"を含む\n" +
+		"名前のチャンネルでのみ反応します\n"
 	sendEmbed(discord, channelID, text)
 }
 
