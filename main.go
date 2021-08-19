@@ -217,7 +217,7 @@ func changeName(userID string, message string, discord *discordgo.Session, chann
 
 	//長さチェック
 	if len(newName) > 16 {
-		embedText := "<@" + userID + "> の**" + eyeOldName + "**の新しい名前は長すぎるよ?"
+		embedText := "<@" + userID + "> のアイの新しい名前は長すぎるよ?"
 		sendEmbed(discord, channelID, embedText)
 		return
 	}
