@@ -4,15 +4,12 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
 	"os/signal"
-	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 
@@ -24,21 +21,23 @@ var (
 	prefix           = flag.String("prefix", "", "call prefix")
 	token            = flag.String("token", "", "bot token")
 	clientID         = ""
-	file             sync.Mutex
-	filePath         = "./UserEye.txt"
-	canDeadByAteFood = 15
+	foodList         = []string{"遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨"}
+	usersData        = []*userItems{}
 	randomPercentage = 30
-	critStateUp      = 2
+	fromReplace      = "0123456789abcdef"
+	fromArray        = strings.Split(fromReplace, "")
+	toReplace        = "ac17683d4e90f2b5"
+	toArray          = strings.Split(toReplace, "")
 )
 
 type userItems struct {
-	userID string
-	food1  string
-	food2  string
-	food3  string
-	hp     int
-	str    int
-	count  int
+	userID       string
+	name         string
+	staminaPoint int
+	cutePoint    int
+	intellPoint  int
+	debufPoint   int
+	speedPoint   int
 }
 
 func main() {
@@ -109,7 +108,6 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	guild := guildData.Name
 	channelID := m.ChannelID
 	channel, _ := discord.Channel(channelID)
-	//	messageID := m.ID
 	message := m.Content
 	author := m.Author.Username
 	authorID := m.Author.ID
@@ -129,24 +127,24 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 			giveFood(authorID, message, discord, channelID)
 		}
 		return
+	case isPrefix(message, "name "):
+		if isBotChannel(channel.Name) {
+			changeName(authorID, message, discord, channelID)
+		}
+		return
+	case isPrefix(message, "le"):
+		if isBotChannel(channel.Name) {
+			goLesson(authorID, message, discord, channelID)
+		}
+		return
 	case isPrefix(message, "st"):
 		if isBotChannel(channel.Name) {
 			sendState(authorID, message, discord, channelID)
 		}
 		return
-	case isPrefix(message, "ad"):
-		if isBotChannel(channel.Name) {
-			goAdventure(authorID, discord, channelID)
-		}
-		return
-	case isPrefix(message, "save"):
-		if isBotChannel(channel.Name) {
-			dataSave(authorID, discord, channelID)
-		}
-		return
 	case isPrefix(message, "load "):
 		if isBotChannel(channel.Name) {
-			dataLoad(authorID, message, discord, channelID)
+			userDataLoad(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "help"):
@@ -164,452 +162,274 @@ func isBotChannel(channelName string) bool {
 }
 
 func giveFood(userID string, message string, discord *discordgo.Session, channelID string) {
-	//重複処理対策
-	file.Lock()
-	defer file.Unlock()
+	//SPの上り具合
+	spUp := randomaizer(6)
+	//UserData一覧
+	shouldGenerateUserData := true
+	ateEyeName := ""
+	ateEyeStaminaPoint := 0
 
-	//テキストデータ
-	text := readFile(filePath)
-	//ユーザーデータ
-	userData := &userItems{
-		userID: userID,
-		food1:  "遺骨",
-		food2:  "遺骨",
-		food3:  "遺骨",
-		hp:     1,
-		str:    1,
-		count:  0,
-	}
-	//書き込みデータ
-	writeText := ""
-	//データ変換
-	for _, line := range strings.Split(text, "\n") {
-		//userData変換
-		if strings.HasPrefix(line, userData.userID) {
-			_, err := fmt.Sscanf(line, "%s %s %s %s %d %d %d", &userData.userID, &userData.food1, &userData.food2, &userData.food3, &userData.hp, &userData.str, &userData.count)
-			if err != nil {
-				log.Println(err)
-				log.Println("		Error: Failed Fmt Line To UserData")
-			}
-		}
-		//書き込みデータ
-		if !strings.HasPrefix(line, userData.userID) && line != "" {
-			writeText = writeText + line + "\n"
+	//UsersDataにないか確認
+	for _, user := range usersData {
+		if user.userID == userID {
+			user.staminaPoint = user.staminaPoint + spUp
+			ateEyeName = user.name
+			ateEyeStaminaPoint = user.staminaPoint
+			shouldGenerateUserData = false
 		}
 	}
-
-	//embed用Textの生成
-	embedText := ""
-
-	//食べ物関連
-	//渡した物の名前
-	foodName := strings.Replace(message, *prefix+" fd ", "", -1)
-	foodName = strings.ReplaceAll(foodName, " ", "")
+	//UsersDataになかったら新しく追加
+	if shouldGenerateUserData {
+		userData := generateUserData(userID)
+		userData.staminaPoint = userData.staminaPoint + spUp
+		ateEyeName = userData.name
+		ateEyeStaminaPoint = userData.staminaPoint
+		usersData = append(usersData, userData)
+	}
+	//渡したものの名前を入手
+	foodName := strings.ReplaceAll(message, *prefix+" fd ", "")
 	foodName = strings.ReplaceAll(foodName, "\n", "")
-	embedText = embedText + "<@" + userData.userID + ">はアイに**" + foodName + "**を渡した\n"
-	//物の順番を変える
-	userData.food3 = userData.food2
-	userData.food2 = userData.food1
-	userData.food1 = foodName
-
-	//ステータスアップ
-	//どのステータスを上げるか乱数設定
-	random := randomaizer(2)
-	stateUp := randomaizer(20) - 5
-	if userData.count+1 >= canDeadByAteFood && randomaizer(100) <= randomPercentage {
-		stateUp = stateUp * 2
-		embedText = embedText + "\\*いつもよりも変化した気がする\n"
-	}
-	switch random {
-	//体力ステータス変更
-	case 1:
-		userData.hp = userData.hp + stateUp
-		stateUpText := strconv.Itoa(stateUp)
-		if stateUp > 0 {
-			stateUpText = "+" + stateUpText
-		}
-		embedText = embedText + "体力が" + strconv.Itoa(userData.hp) + "(" + stateUpText + ") になった\n"
-	//攻撃ステータス変更
-	case 2:
-		userData.str = userData.str + stateUp
-		stateUpText := strconv.Itoa(stateUp)
-		if stateUp > 0 {
-			stateUpText = "+" + stateUpText
-		}
-		//攻撃 0以下 回避
-		if userData.str < 1 {
-			userData.str = 1
-		}
-		embedText = embedText + "攻撃が" + strconv.Itoa(userData.str) + "(" + stateUpText + ") になった\n"
-	}
-
-	//死亡判定
-	userData.count++
-	shouldDead := false
-	//Count確認
-	if userData.count >= canDeadByAteFood {
-		if randomaizer(100) <= randomPercentage {
-			embedText = embedText + "\\*おなかいっぱいで死んでしまった\\*\n"
-			shouldDead = true
+	//物の名前を追加
+	for i := len(foodList) - 1; i >= 0; i = i - 1 {
+		if i > 0 {
+			foodList[i] = foodList[i-1]
 		} else {
-			embedText = embedText + "**涙目になっている**\n"
+			foodList[0] = foodName
 		}
 	}
-	if userData.hp < 1 {
-		embedText = embedText + "\\*体力がなくて死んでしまった\\*\n"
-		shouldDead = true
+	//Embed用のデータ作成
+	embedText := "<@" + userID + "> の**" + ateEyeName + "**は\n" +
+		"**" + foodName + "**をたべて\n" +
+		"StaminaPointが" + strconv.Itoa(ateEyeStaminaPoint) + "(+" + strconv.Itoa(spUp) + ") になった"
+	//結果送信
+	sendEmbed(discord, channelID, embedText)
+}
+
+func changeName(userID string, message string, discord *discordgo.Session, channelID string) {
+	//UserData一覧
+	shouldGenerateUserData := true
+	eyeOldName := ""
+
+	//新しい名前を入手
+	newName := strings.ReplaceAll(message, *prefix+" name ", "")
+	newName = strings.ReplaceAll(newName, "\n", "")
+	newName = strings.ReplaceAll(newName, " ", "")
+
+	//長さチェック
+	if len(newName) > 16 {
+		embedText := "<@" + userID + "> の**" + eyeOldName + "**の新しい名前は長すぎるよ?"
+		sendEmbed(discord, channelID, embedText)
+		return
+	}
+	//UsersDataにないか確認
+	for _, user := range usersData {
+		if user.userID == userID {
+			eyeOldName = user.name
+			user.name = newName
+			shouldGenerateUserData = false
+		}
+	}
+	//UsersDataになかったら新しく追加
+	if shouldGenerateUserData {
+		userData := generateUserData(userID)
+		eyeOldName = userData.name
+		userData.name = newName
+		usersData = append(usersData, userData)
 	}
 
-	//userData書き込み
-	if !shouldDead {
-		userText := userData.userID + " " +
-			userData.food1 + " " +
-			userData.food2 + " " +
-			userData.food3 + " " +
-			strconv.Itoa(userData.hp) + " " +
-			strconv.Itoa(userData.str) + " " +
-			strconv.Itoa(userData.count)
-		writeText = writeText + userText + "\n"
-	}
-	//書き込み
-	writeFile(filePath, writeText)
-
-	//結果表示
+	//Embed用のデータ作成
+	embedText := "<@" + userID + "> の**" + eyeOldName + "**は**" + newName + "**に名前が変わった!"
+	//結果送信
 	sendEmbed(discord, channelID, embedText)
 }
 
 func sendState(userID string, message string, discord *discordgo.Session, channelID string) {
-	//重複処理対策
-	file.Lock()
-	defer file.Unlock()
-
-	//テキストデータ
-	text := readFile(filePath)
-	//ユーザーデータ
-	userData := &userItems{
-		userID: userID,
-		food1:  "遺骨",
-		food2:  "遺骨",
-		food3:  "遺骨",
-		hp:     1,
-		str:    1,
-		count:  -1,
-	}
-
-	//もしIDが指定されてればそっちを表示
+	//もし指定されてたら変更
 	if strings.HasPrefix(message, *prefix+" st ") {
-		userData.userID = strings.Replace(message, *prefix+" st ", "", -1)
+		userID = strings.ReplaceAll(message, *prefix+" st ", "")
 	}
-	//データ変換
-	for _, line := range strings.Split(text, "\n") {
-		//userData変換
-		if strings.HasPrefix(line, userData.userID) {
-			_, err := fmt.Sscanf(line, "%s %s %s %s %d %d %d", &userData.userID, &userData.food1, &userData.food2, &userData.food3, &userData.hp, &userData.str, &userData.count)
+	//UserIDからデータ探索
+	shouldSendNotFoundUserEmbed := true
+	for _, user := range usersData {
+		if user.userID == userID {
+			//Embed用テキスト作成
+			userDataByUserID, err := discord.User(user.userID)
 			if err != nil {
 				log.Println(err)
-				log.Println("		Error: Failed Fmt Line To UserData")
+				log.Println("		Error: NotFoundUserDataByUserID")
 			}
+			userName := userDataByUserID.Username
+			embedText := "@" + userName + "のアイのすてーたす:\n" +
+				"なまえ　　　　:　" + user.name + "\n" +
+				"すたみな　　　:　" + strconv.Itoa(user.staminaPoint) + "\n" +
+				"かわいさ　　　:　" + strconv.Itoa(user.cutePoint) + "\n" +
+				"かしこさ　　　:　" + strconv.Itoa(user.intellPoint) + "\n" +
+				"でばふぱわー　:　" + strconv.Itoa(user.debufPoint) + "\n" +
+				"すばやさ　　　:　" + strconv.Itoa(user.speedPoint) + "\n" +
+				"あじ　　　　　:　**" + foodList[randomaizer(len(foodList)-1)] + "** 味?\n"
+			sendEmbed(discord, channelID, embedText)
+			shouldSendNotFoundUserEmbed = false
 		}
 	}
-
-	//embed用Textの生成
-	embedText := ""
-	if userData.count >= 0 {
-		//user名を平文に
-		userName := ""
-		isID := regexp.MustCompile(`[0-9]{18}`)
-		if isID.MatchString(userData.userID) {
-			userDataByID, _ := discord.User(userData.userID)
-			userName = userDataByID.Username
-		} else {
-			userName = userData.userID
-		}
-		//固定部分
-		embedText = "@" + userName + "のアイのステータス\n" +
-			"食べたもの1:" + userData.food1 + "\n" +
-			"食べたもの2:" + userData.food2 + "\n" +
-			"食べたもの3:" + userData.food3 + "\n" +
-			"体力:" + strconv.Itoa(userData.hp) + "  攻撃:" + strconv.Itoa(userData.str) + "\n"
-		//可変部分
-		//性格
-		temperArr := []string{"", "主のことが好きのようだ", "????", "主のことが嫌いのようだ", "引きこもろうとしている", "何か恐れている", "????", "繧九↑縺｡繝ｼ", "お仕事が好き"}
-		arrayLength := len(temperArr)
-		arrayNumber := userData.hp*userData.str%(arrayLength-1) + 1
-		temper := temperArr[arrayNumber]
-		//味
-		meetArr := []string{"", userData.food1, userData.food2, userData.food3}
-		arrayLength = len(meetArr)
-		meet := meetArr[randomaizer(arrayLength-1)]
-		//属性
-		attoributeArr := []string{"", "水", "火", "木", "光", "闇"}
-		arrayLength = len(attoributeArr)
-		arrayNumber = userData.hp*userData.str%(arrayLength-1) + 1
-		attribute := attoributeArr[arrayNumber]
-		//embed最終形
-		embedText = embedText +
-			"性格 : " + temper + "\n" +
-			"味 : " + meet + "\n" +
-			"属性 : " + attribute + "\n"
-	} else {
-		//user名を平文に
-		userName := ""
-		isID := regexp.MustCompile(`[0-9]{18}`)
-		if isID.MatchString(userData.userID) {
-			userDataByID, _ := discord.User(userData.userID)
-			userName = userDataByID.Username
-		} else {
-			userName = userData.userID
-		}
-		//固定部分
-		embedText = "@" + userName + "のアイのステータスはないよ?\n"
+	if shouldSendNotFoundUserEmbed {
+		embedText := "その人のアイのすてーたすみつからなかったよ?"
+		sendEmbed(discord, channelID, embedText)
 	}
-	//結果表示
-	sendEmbed(discord, channelID, embedText)
-
 }
 
-func goAdventure(userID string, discord *discordgo.Session, channelID string) {
-	//重複処理対策
-	file.Lock()
-	defer file.Unlock()
-
-	//テキストデータ
-	text := readFile(filePath)
-	//ユーザーデータ
-	userData := &userItems{
-		userID: userID,
-		food1:  "遺骨",
-		food2:  "遺骨",
-		food3:  "遺骨",
-		hp:     1,
-		str:    1,
-		count:  0,
-	}
-	enemyData := &userItems{
-		userID: "unknown",
-		food1:  "遺骨",
-		food2:  "遺骨",
-		food3:  "遺骨",
-		hp:     1,
-		str:    1,
-		count:  0,
+func goLesson(userID string, message string, discord *discordgo.Session, channelID string) {
+	//もし指定されていないならreturn
+	if !strings.HasPrefix(message, *prefix+" le") {
+		return
 	}
 
-	//書き込みデータ
-	writeText := ""
+	//UserData一覧
+	shouldGenerateUserData := true
 
-	//敵指定
-	lines := strings.Count(text, "\n")
-	enemyLine := randomaizer(lines - 1)
-	lineCount := 0
-
-	//データ変換
-	for _, line := range strings.Split(text, "\n") {
-		//userData変換
-		if strings.HasPrefix(line, userData.userID) {
-			_, err := fmt.Sscanf(line, "%s %s %s %s %d %d %d", &userData.userID, &userData.food1, &userData.food2, &userData.food3, &userData.hp, &userData.str, &userData.count)
-			if err != nil {
-				log.Println(err)
-				log.Println("		Error: Failed Fmt Line To UserData")
+	//UsersDataにないか確認
+	for _, user := range usersData {
+		if user.userID == userID {
+			shouldGenerateUserData = false
+			stateUp := randomaizer(10)
+			selectStateUp := randomaizer(3)
+			useStamina := randomaizer(15)
+			//スタミナチェック
+			if user.staminaPoint < useStamina {
+				embedText := "せんせいはいたけど **" + user.name + "**のスタミナが足りなかったよ\n"
+				sendEmbed(discord, channelID, embedText)
+				return
 			}
-		}
-		//enemyData変換
-		if lineCount == enemyLine {
-			_, err := fmt.Sscanf(line, "%s %s %s %s %d %d %d", &enemyData.userID, &enemyData.food1, &enemyData.food2, &enemyData.food3, &enemyData.hp, &enemyData.str, &enemyData.count)
-			if err != nil {
-				log.Println("		Error: Failed Fmt Line To EnemyData")
-				log.Println("		And Change Enemy to Herobrine")
-				enemyData.userID = "MC: HeroBrine"
-				enemyData.hp = enemyData.hp + randomaizer(5000)
-				enemyData.str = enemyData.str + randomaizer(5000)
+			user.staminaPoint = user.staminaPoint - useStamina
+
+			//送るようembed
+			embedText := ""
+
+			//対面判定
+			if randomaizer(100) <= randomPercentage {
+				addSpeedPoint := randomaizer(3)
+				user.speedPoint = user.speedPoint + addSpeedPoint
+				embedText = "**" + user.name + "**は せんせいにあうことができなかった...\n" +
+					"だけど すばやさが" + strconv.Itoa(user.speedPoint) + "(+" + strconv.Itoa(addSpeedPoint) + ")になった\n"
+				selectStateUp = 0
 			}
-		}
-		lineCount++
-		//書き込みデータ
-		if !strings.HasPrefix(line, userData.userID) && line != "" {
-			writeText = writeText + line + "\n"
-		}
-	}
 
-	//宣言
-	embedText := "<@" + userData.userID + "> のアイは冒険に出た\n" +
-		"<@" + userData.userID + ">のアイ HP:" + strconv.Itoa(userData.hp) + " 攻撃力:" + strconv.Itoa(userData.str) + "\n"
-	if !strings.Contains(enemyData.userID, "MC:") {
-		enemyDataByID, _ := discord.User(enemyData.userID)
-		enemyName := enemyDataByID.Username
-		embedText = embedText + "@" + enemyName + "のアイ HP:" + strconv.Itoa(enemyData.hp) + " 攻撃力:" + strconv.Itoa(enemyData.str) + " に勝負を仕掛けた!\n\n"
-	} else {
-		embedText = embedText + enemyData.userID + "のアイ HP:" + strconv.Itoa(enemyData.hp) + " 攻撃力:" + strconv.Itoa(enemyData.str) + " に勝負を仕掛けた!\n\n"
-	}
+			switch selectStateUp {
+			//かわいいせんせい
+			case 1:
+				user.cutePoint = user.cutePoint + stateUp
+				embedText = "**" + user.name + "**は かわいい せんせいにあうことができた!\n" +
+					"かわいさが" + strconv.Itoa(user.cutePoint) + "(+" + strconv.Itoa(stateUp) + ")になった\n"
+				//ぐーぐるせんせい
+			case 2:
+				user.intellPoint = user.intellPoint + stateUp
+				embedText = "**" + user.name + "**は ぐーぐる せんせいにあうことができた!\n" +
+					"かしこさが" + strconv.Itoa(user.intellPoint) + "(+" + strconv.Itoa(stateUp) + ")になった\n"
+				//ないとめあせんせい
+			case 3:
+				user.debufPoint = user.debufPoint + stateUp
+				embedText = "**" + user.name + "**は ないとめあ せんせいにあうことができた!\n" +
+					"でばふぱわーが" + strconv.Itoa(user.debufPoint) + "(+" + strconv.Itoa(stateUp) + ")になった\n"
 
-	//戦闘判定
-	var isWin bool
-	dummyHp := userData.hp
-	dummyStr := userData.str
-	damage := 0
-	for {
-		//自分攻撃
-		damage = (randomaizer(3) - 1) * dummyStr
-		enemyData.hp = enemyData.hp - damage
-		embedText = embedText + "自分ターン: " + strconv.Itoa(damage) + "damage 相手HP:" + strconv.Itoa(enemyData.hp) + "\n"
-		if enemyData.hp <= 0 {
-			embedText = embedText + "勝負に勝った\n自分のアイのおなかがすいたようだ\n"
-			isWin = true
-			break
-		}
-		//敵攻撃
-		crit := (randomaizer(10) - 1)
-		if crit >= 3 || crit <= 9 {
-			crit = 2
-		}
-		damage = crit * enemyData.str
-		dummyHp = dummyHp - damage
-		embedText = embedText + "相手ターン: " + strconv.Itoa(damage) + "damage 自分HP:" + strconv.Itoa(dummyHp) + "\n"
-		if dummyHp <= 0 {
-			embedText = embedText + "自分のアイは死んでしまった\n"
-			isWin = false
-			break
-		}
-	}
-
-	//戦闘結果からstate変動
-	userdata := ""
-	if isWin {
-		addHp := randomaizer(20)
-		userData.hp = userData.hp + addHp
-		addStrength := randomaizer(15)
-		userData.str = userData.str + addStrength
-		userData.count = 0
-		userdata = userData.userID + " " + userData.food1 + " " + userData.food2 + " " + userData.food3 + " " + strconv.Itoa(userData.hp) + " " + strconv.Itoa(userData.str) + " " + strconv.Itoa(userData.count)
-		embedText = embedText + "HP:" + strconv.Itoa(userData.hp) + "(+" + strconv.Itoa(addHp) + ") 攻撃力:" + strconv.Itoa(userData.str) + "(+" + strconv.Itoa(addStrength) + ")\n"
-	} else {
-		userData.count = canDeadByAteFood
-		//確率でステータス返却
-		if randomaizer(100) <= randomPercentage {
-			userData.hp = userData.hp/2 + 1
-			userData.str = userData.str/2 + 1
-			userdata = userData.userID + " " + userData.food1 + " " + userData.food2 + " " + userData.food3 + " " + strconv.Itoa(userData.hp) + " " + strconv.Itoa(userData.str) + " " + strconv.Itoa(userData.count)
-			embedText = embedText + "遺品を少し回収することができた\n"
-		}
-	}
-	//最終書き込み内容
-	writeText = writeText + userdata + "\n"
-
-	//書き込み
-	writeFile(filePath, writeText)
-
-	//データ送信
-	sendEmbed(discord, channelID, embedText)
-}
-
-func dataSave(userID string, discord *discordgo.Session, channelID string) {
-	//重複処理対策
-	file.Lock()
-	defer file.Unlock()
-
-	//テキストデータ
-	text := readFile(filePath)
-
-	//ユーザーデータ
-	userData := &userItems{
-		userID: userID,
-		food1:  "遺骨",
-		food2:  "遺骨",
-		food3:  "遺骨",
-		hp:     1,
-		str:    1,
-		count:  0,
-	}
-
-	//データ変換
-	for _, line := range strings.Split(text, "\n") {
-		//userData保存
-		if strings.HasPrefix(line, userID) {
-			_, err := fmt.Sscanf(line, "%s %s %s %s %d %d %d", &userData.userID, &userData.food1, &userData.food2, &userData.food3, &userData.hp, &userData.str, &userData.count)
-			if err != nil {
-				log.Println(err)
-				log.Println("		Error: Failed Fmt Line To UserData")
 			}
-		}
-	}
-
-	//暗号化
-	userSaveData := userData.userID + "," + strconv.Itoa(userData.hp) + "," + strconv.Itoa(userData.str) + "," + strconv.Itoa(userData.count) + ","
-	saveData := hex.EncodeToString([]byte(userSaveData))
-
-	//コード送信
-	embedText := "<@" + userData.userID + "> コードができたよ!\n" +
-		"Code: **" + saveData + "**\n" +
-		"ユーザーごとに違うから注意してね!\n" +
-		"データがないときにしかロードできないよ!"
-	sendEmbed(discord, channelID, embedText)
-}
-
-func dataLoad(userID string, message string, discord *discordgo.Session, channelID string) {
-	//重複処理対策
-	file.Lock()
-	defer file.Unlock()
-
-	//テキストデータ
-	text := readFile(filePath)
-
-	//ユーザーデータ
-	userData := &userItems{
-		userID: userID,
-		food1:  "遺骨",
-		food2:  "遺骨",
-		food3:  "遺骨",
-		hp:     1,
-		str:    1,
-		count:  0,
-	}
-
-	//書き込みデータ
-	writeText := ""
-	//データ変換
-	for _, line := range strings.Split(text, "\n") {
-		//userData保存
-		if strings.HasPrefix(line, userID) {
-			embedText := "<@" + userID + "> の今のアイがかわいそうだよ...\n"
+			//暗号化
+			dummyUserID := user.userID
+			dummyStaminaPoint := fmt.Sprint(user.staminaPoint)
+			dummyCutePoint := fmt.Sprint(user.cutePoint)
+			dummyIntellPoint := fmt.Sprint(user.intellPoint)
+			dummyDebufPoint := fmt.Sprint(user.debufPoint)
+			dummySpeedPoint := fmt.Sprint(user.speedPoint)
+			userSaveData := dummyUserID + " " + user.name + " " + dummyStaminaPoint + " " + dummyCutePoint + " " + dummyIntellPoint + " " + dummyDebufPoint + " " + dummySpeedPoint + " "
+			//データをデコード
+			saveData := hex.EncodeToString([]byte(userSaveData))
+			sendCode := ""
+			count := 0
+			//分割してずらす
+			for _, alpha := range strings.Split(saveData, "") {
+				count++
+				start := (strings.Index(fromReplace, alpha) + count) % len(fromArray)
+				sendCode = sendCode + toArray[start]
+			}
+			embedText = embedText + "\nSaveCode:**" + sendCode + "**\n" +
+				"一人一人違うからね!"
 			sendEmbed(discord, channelID, embedText)
 			return
 		}
-		//書き込みデータ
-		if !strings.HasPrefix(line, userData.userID) && line != "" {
-			writeText = writeText + line + "\n"
-		}
 	}
+
+	//UsersDataになかったら新しく追加
+	if shouldGenerateUserData {
+		embedText := "せんせいはいたけど <@" + userID + ">のアイがこなかったよ"
+		sendEmbed(discord, channelID, embedText)
+		return
+	}
+}
+
+func userDataLoad(userID string, message string, discord *discordgo.Session, channelID string) {
+	//セーブコード入手
+	saveCode := strings.ReplaceAll(message, *prefix+" load ", "")
 
 	//復号
-	saveCode := strings.Replace(message, *prefix+" load ", "", -1)
-	saveData, _ := hex.DecodeString(saveCode)
-	saveUserData := strings.Split(string(saveData), ",")
-	if len(saveUserData) == 5 {
-		dummyHp, _ := strconv.Atoi(saveUserData[1])
-		saveHp := dummyHp * 3 / 5
-		dummyStr, _ := strconv.Atoi(saveUserData[2])
-		saveStr := dummyStr * 3 / 5
-		userData := saveUserData[0] + " LoadedThisEye LoadedThisEye LoadedThisEye " + strconv.Itoa(saveHp) + " " + strconv.Itoa(saveStr) + " " + saveUserData[3]
-		writeText = writeText + userData + "\n"
-		writeFile(filePath, writeText)
-		embedText := "<@" + saveUserData[0] + "> のアイのデータを読み込んだよ!\n" +
-			"よわくなってしまった\n" +
-			"ステータス: 体力:" + strconv.Itoa(saveHp) + " 攻撃:" + strconv.Itoa(saveStr)
-		sendEmbed(discord, channelID, embedText)
-		log.Println("Loaded : " + userData)
-	} else {
-		embedText := "<@" + userID + "> さん 嘘ついてない?\n"
-		sendEmbed(discord, channelID, embedText)
-
+	loadData := ""
+	count := 0
+	//分割してずらす
+	for _, alpha := range strings.Split(saveCode, "") {
+		count++
+		start := strings.Index(toReplace, alpha) - count
+		for i := 0; start < 0; i++ {
+			start = start + len(toArray)
+		}
+		loadData = loadData + fromArray[start]
 	}
+	//データをエンコード
+	data, _ := hex.DecodeString(loadData)
+	log.Println("Load : \"" + string(data) + "\"")
+	flatUserData := string(data)
+	//Embed用
+	embedText := ""
+
+	//軽く確認
+	if strings.Count(flatUserData, " ") == 7 && strings.HasPrefix(flatUserData, userID+" ") {
+		//一時保存用
+		dummyUserData := generateUserData("null")
+
+		//整形
+		_, err := fmt.Sscanf(flatUserData, "%s %s %d %d %d %d %d ", &dummyUserData.userID, &dummyUserData.name, &dummyUserData.staminaPoint, &dummyUserData.cutePoint, &dummyUserData.intellPoint, &dummyUserData.debufPoint, &dummyUserData.speedPoint)
+		if err != nil {
+			log.Println(err)
+			log.Println("		Error : Failed Encode LoadUserData")
+			return
+		}
+
+		//UsersDataにないか確認
+		shouldGenerateUserData := true
+		for _, user := range usersData {
+			if user.userID == dummyUserData.userID {
+				//丸々移す
+				user = dummyUserData
+				shouldGenerateUserData = false
+				embedText = "<@" + user.userID + "> のアイのデータを読み込んだよ!\n" +
+					"<@" + user.userID + " >のアイ(**" + user.name + "**)は嬉しそうだ!"
+			}
+		}
+		//UsersDataになかったら新しく追加
+		if shouldGenerateUserData {
+			dummyUserData.userID = userID
+			usersData = append(usersData, dummyUserData)
+			embedText = "<@" + dummyUserData.userID + "> のアイのデータを保存したよ!\n" +
+				"<@" + dummyUserData.userID + " >のアイ(**" + dummyUserData.name + "**)は嬉しそうだ!"
+		}
+	} else {
+		embedText = "<@" + userID + "> 嘘ついたりずるしたりしてない??\n"
+	}
+	//結果送信
+	sendEmbed(discord, channelID, embedText)
 }
 
 func sendHelp(discord *discordgo.Session, channelID string) {
 	embedText := "Bot Help\n" +
-		*prefix + " fd <単語> : 自分のアイにご飯を上げます\n" +
-		*prefix + " st : 自分のアイのステータスを確認します\n" +
-		*prefix + " ad : ランダムなplayerに勝負をかけます\n" +
-		*prefix + " save : 自分のアイのデータの保存コードを表示します\n" +
+		*prefix + " fd <単語> : 自分のアイにごはんを上げます\n" +
+		*prefix + " lesson <cute\\|\\|google\\|\\|night>: 自分のアイがじゅぎょーをうけ\n" +
+		*prefix + " state : 自分のアイのすてーたすを確認します\n" +
 		*prefix + " load <コード>: 自分のアイのデータの保存コードから読み込みます\n" +
 		"*help以外のコマンドは\"アイ育成\"を含む\n" +
 		"名前のチャンネルでのみ反応します\n"
@@ -631,56 +451,23 @@ func sendEmbed(discord *discordgo.Session, channelID string, text string) {
 	}
 }
 
-//リアクション追加用
-func addReaction(discord *discordgo.Session, channelID string, messageID string, reaction string) {
-	err := discord.MessageReactionAdd(channelID, messageID, reaction)
-	if err != nil {
-		log.Print("Error: addReaction Failed")
-		log.Println(err)
-	}
-}
-
-//ファイル読み込み
-func readFile(filePath string) (text string) {
-	//ファイルがあるか確認
-	_, err := os.Stat(filePath)
-	//ファイルがなかったら作成
-	if os.IsNotExist(err) {
-		_, err = os.Create(filePath)
-		if err != nil {
-			log.Println(err)
-			log.Println("		Error: Faild Create File")
-			return
-		}
-	}
-
-	//読み込み
-	byteText, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		log.Println(err)
-		log.Println("		Error: Faild Read File")
-		return
-	}
-
-	//[]byteをstringに
-	text = string(byteText)
-	return
-}
-
-//ファイル書き込み
-func writeFile(filePath string, writeText string) {
-	//書き込み
-	err := ioutil.WriteFile(filePath, []byte(writeText), 0777)
-	if err != nil {
-		log.Println(err)
-		log.Println("		Error: Faild Write File")
-	}
-}
-
 //乱数入手用
 func randomaizer(limit int) (random int) {
 	//乱数のseed
 	rand.Seed(time.Now().UnixNano())
 	random = rand.Intn(limit) + 1
 	return
+}
+
+//デフォルトユーザーデータ
+func generateUserData(userID string) (userData *userItems) {
+	return &userItems{
+		userID:       userID,
+		name:         "unknown",
+		staminaPoint: 1,
+		cutePoint:    1,
+		intellPoint:  1,
+		debufPoint:   1,
+		speedPoint:   1,
+	}
 }
