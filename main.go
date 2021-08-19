@@ -428,7 +428,7 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 func sendHelp(discord *discordgo.Session, channelID string) {
 	embedText := "Bot Help\n" +
 		*prefix + " fd <単語> : 自分のアイにごはんを上げます\n" +
-		*prefix + " lesson <cute\\|\\|google\\|\\|night>: 自分のアイがじゅぎょーをうけ\n" +
+		*prefix + " lesson: 自分のアイがじゅぎょーをうけ\n" +
 		*prefix + " state : 自分のアイのすてーたすを確認します\n" +
 		*prefix + " load <コード>: 自分のアイのデータの保存コードから読み込みます\n" +
 		"*help以外のコマンドは\"アイ育成\"を含む\n" +
