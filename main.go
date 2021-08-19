@@ -205,6 +205,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	//渡した物の名前
 	foodName := strings.Replace(message, *prefix+" fd ", "", -1)
 	foodName = strings.ReplaceAll(foodName, " ", "")
+	foodName = strings.ReplaceAll(foodName, "\n", "")
 	embedText = embedText + "<@" + userData.userID + ">はアイに**" + foodName + "**を渡した\n"
 	//物の順番を変える
 	userData.food3 = userData.food2
@@ -416,8 +417,11 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 		if lineCount == enemyLine {
 			_, err := fmt.Sscanf(line, "%s %s %s %s %d %d %d", &enemyData.userID, &enemyData.food1, &enemyData.food2, &enemyData.food3, &enemyData.hp, &enemyData.str, &enemyData.count)
 			if err != nil {
-				log.Println(err)
 				log.Println("		Error: Failed Fmt Line To EnemyData")
+				log.Println("		And Change Enemy to Herobrine")
+				enemyData.userID = "MC: HeroBrine"
+				enemyData.hp = enemyData.hp + randomaizer(5000)
+				enemyData.str = enemyData.str + randomaizer(5000)
 			}
 		}
 		lineCount++
@@ -454,7 +458,11 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 			break
 		}
 		//敵攻撃
-		damage = (randomaizer(3) - 1) * enemyData.str
+		crit := (randomaizer(10) - 1)
+		if crit >= 3 || crit <= 9 {
+			crit = 2
+		}
+		damage = crit * enemyData.str
 		dummyHp = dummyHp - damage
 		embedText = embedText + "相手ターン: " + strconv.Itoa(damage) + "damage 自分HP:" + strconv.Itoa(dummyHp) + "\n"
 		if dummyHp <= 0 {
@@ -575,15 +583,20 @@ func dataLoad(userID string, message string, discord *discordgo.Session, channel
 	//復号
 	saveCode := strings.Replace(message, *prefix+" load ", "", -1)
 	saveData, _ := hex.DecodeString(saveCode)
-	log.Println("Load: " + string(saveData))
 	saveUserData := strings.Split(string(saveData), ",")
 	if len(saveUserData) == 5 {
-		userData := saveUserData[0] + " LoadedThisEye LoadedThisEye LoadedThisEye " + saveUserData[1] + " " + saveUserData[2] + " " + saveUserData[3]
+		dummyHp, _ := strconv.Atoi(saveUserData[1])
+		saveHp := dummyHp * 2 / 5 / randomaizer(10)
+		dummyStr, _ := strconv.Atoi(saveUserData[2])
+		saveStr := dummyStr * 2 / 5 / randomaizer(10)
+		userData := saveUserData[0] + " LoadedThisEye LoadedThisEye LoadedThisEye " + strconv.Itoa(saveHp) + " " + strconv.Itoa(saveStr) + " " + saveUserData[3]
 		writeText = writeText + userData + "\n"
 		writeFile(filePath, writeText)
 		embedText := "<@" + saveUserData[0] + "> のアイのデータを読み込んだよ!\n" +
-			"ステータス: 体力:" + saveUserData[1] + " 攻撃:" + saveUserData[2]
+			"よわくなってしまった\n" +
+			"ステータス: 体力:" + strconv.Itoa(saveHp) + " 攻撃:" + strconv.Itoa(saveStr)
 		sendEmbed(discord, channelID, embedText)
+		log.Println("Loaded : " + userData)
 	} else {
 		embedText := "<@" + userID + "> さん 嘘ついてない?\n"
 		sendEmbed(discord, channelID, embedText)
