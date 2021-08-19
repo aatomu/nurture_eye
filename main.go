@@ -586,9 +586,9 @@ func dataLoad(userID string, message string, discord *discordgo.Session, channel
 	saveUserData := strings.Split(string(saveData), ",")
 	if len(saveUserData) == 5 {
 		dummyHp, _ := strconv.Atoi(saveUserData[1])
-		saveHp := dummyHp * 2 / 5 / randomaizer(10)
+		saveHp := dummyHp * 3 / 5
 		dummyStr, _ := strconv.Atoi(saveUserData[2])
-		saveStr := dummyStr * 2 / 5 / randomaizer(10)
+		saveStr := dummyStr * 3 / 5
 		userData := saveUserData[0] + " LoadedThisEye LoadedThisEye LoadedThisEye " + strconv.Itoa(saveHp) + " " + strconv.Itoa(saveStr) + " " + saveUserData[3]
 		writeText = writeText + userData + "\n"
 		writeFile(filePath, writeText)
