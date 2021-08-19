@@ -215,7 +215,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 	//どのステータスを上げるか乱数設定
 	random := randomaizer(2)
 	stateUp := randomaizer(20) - 5
-	if userData.count+1 >= canDeadByAteFood && randomaizer(100) <= canDeadByAteFood {
+	if userData.count+1 >= canDeadByAteFood && randomaizer(100) <= randomPercentage {
 		stateUp = stateUp * 2
 		embedText = embedText + "\\*いつもよりも変化した気がする\n"
 	}
