@@ -428,7 +428,7 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	}
 
 	//宣言
-	embedText := "@" + userData.userID + " のアイは冒険に出た\n" +
+	embedText := "<@" + userData.userID + "> のアイは冒険に出た\n" +
 		"<@" + userData.userID + ">のアイ HP:" + strconv.Itoa(userData.hp) + " 攻撃力:" + strconv.Itoa(userData.str) + "\n"
 	if !strings.Contains(enemyData.userID, "MC:") {
 		enemyDataByID, _ := discord.User(enemyData.userID)
