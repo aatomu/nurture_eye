@@ -428,10 +428,8 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	}
 
 	//宣言
-	userDataByID, _ := discord.User(userData.userID)
-	userName := userDataByID.Username
-	embedText := "@" + userName + " のアイは冒険に出た\n" +
-		"@" + userName + "のアイ HP:" + strconv.Itoa(userData.hp) + " 攻撃力:" + strconv.Itoa(userData.str) + "\n"
+	embedText := "@" + userData.userID + " のアイは冒険に出た\n" +
+		"<@" + userData.userID + ">のアイ HP:" + strconv.Itoa(userData.hp) + " 攻撃力:" + strconv.Itoa(userData.str) + "\n"
 	if !strings.Contains(enemyData.userID, "MC:") {
 		enemyDataByID, _ := discord.User(enemyData.userID)
 		enemyName := enemyDataByID.Username
@@ -587,7 +585,7 @@ func dataLoad(userID string, message string, discord *discordgo.Session, channel
 			"ステータス: 体力:" + saveUserData[1] + " 攻撃:" + saveUserData[2]
 		sendEmbed(discord, channelID, embedText)
 	} else {
-		embedText := "<@" + saveUserData[0] + "> さん 嘘ついてない?\n"
+		embedText := "<@" + userID + "> さん 嘘ついてない?\n"
 		sendEmbed(discord, channelID, embedText)
 
 	}
