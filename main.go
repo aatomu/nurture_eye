@@ -408,7 +408,7 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 				user = dummyUserData
 				shouldGenerateUserData = false
 				embedText = "<@" + user.userID + "> のアイのデータを読み込んだよ!\n" +
-					"<@" + user.userID + " >のアイ(**" + user.name + "**)は嬉しそうだ!"
+					"<@" + user.userID + "> のアイ(**" + user.name + "**)は嬉しそうだ!"
 			}
 		}
 		//UsersDataになかったら新しく追加
@@ -416,7 +416,7 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 			dummyUserData.userID = userID
 			usersData = append(usersData, dummyUserData)
 			embedText = "<@" + dummyUserData.userID + "> のアイのデータを保存したよ!\n" +
-				"<@" + dummyUserData.userID + " >のアイ(**" + dummyUserData.name + "**)は嬉しそうだ!"
+				"<@" + dummyUserData.userID + "> のアイ(**" + dummyUserData.name + "**)は嬉しそうだ!"
 		}
 	} else {
 		embedText = "<@" + userID + "> 嘘ついたりずるしたりしてない??\n"
