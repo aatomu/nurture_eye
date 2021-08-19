@@ -64,10 +64,11 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM+JJJJ` ` `` ` `` ``(JJJJMMMMMMMMMMMMM
 ```go run main.go -prefix=<prefix> -token=<bot token>```
   
 ## -botｺﾏﾝﾄﾞ-  
-`<prefix> give <sentence>` : ご飯を上げます   
-`<prefix> state` : 自分のアイのステータスを確認します  
-`<prefix> adventure` : ランダムなplayerに勝負をかけます  
-
+`<prefix> fd <sentence>` : ご飯を上げます   
+`<prefix> st` : 自分のアイのステータスを確認します  
+`<prefix> ad` : ランダムなplayerに勝負をかけます  
+`<prefix> save` : 自分のアイのデータの保存コードを表示します\n" +
+`<prefix> load <コード>` : 自分のアイのデータの保存コードから読み込みます\n" +
 ## コード元:  
 Bot API Code   : https://github.com/bwmarrin/discordgo  
 Bot Language   : https://golang.org/  

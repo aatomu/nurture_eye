@@ -239,7 +239,7 @@ func giveFood(userID string, message string, discord *discordgo.Session, channel
 		if userData.str < 1 {
 			userData.str = 1
 		}
-		embedText = embedText + "攻撃が" + strconv.Itoa(userData.hp) + "(" + stateUpText + ") になった\n"
+		embedText = embedText + "攻撃が" + strconv.Itoa(userData.str) + "(" + stateUpText + ") になった\n"
 	}
 
 	//死亡判定
@@ -428,8 +428,10 @@ func goAdventure(userID string, discord *discordgo.Session, channelID string) {
 	}
 
 	//宣言
-	embedText := "<@" + userID + "> のアイは冒険に出た\n" +
-		"<@" + userID + ">のアイ HP:" + strconv.Itoa(userData.hp) + " 攻撃力:" + strconv.Itoa(userData.str) + "\n"
+	userDataByID, _ := discord.User(userData.userID)
+	userName := userDataByID.Username
+	embedText := "@" + userName + " のアイは冒険に出た\n" +
+		"@" + userName + "のアイ HP:" + strconv.Itoa(userData.hp) + " 攻撃力:" + strconv.Itoa(userData.str) + "\n"
 	if !strings.Contains(enemyData.userID, "MC:") {
 		enemyDataByID, _ := discord.User(enemyData.userID)
 		enemyName := enemyDataByID.Username
@@ -595,7 +597,7 @@ func sendHelp(discord *discordgo.Session, channelID string) {
 	embedText := "Bot Help\n" +
 		*prefix + " fd <単語> : 自分のアイにご飯を上げます\n" +
 		*prefix + " st : 自分のアイのステータスを確認します\n" +
-		*prefix + " adv : ランダムなplayerに勝負をかけます\n" +
+		*prefix + " ad : ランダムなplayerに勝負をかけます\n" +
 		*prefix + " save : 自分のアイのデータの保存コードを表示します\n" +
 		*prefix + " load <コード>: 自分のアイのデータの保存コードから読み込みます\n" +
 		"*help以外のコマンドは\"アイ育成\"を含む\n" +
