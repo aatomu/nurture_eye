@@ -64,11 +64,11 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM+JJJJ` ` `` ` `` ``(JJJJMMMMMMMMMMMMM
 ```go run main.go -prefix=<prefix> -token=<bot token>```
   
 ## -botｺﾏﾝﾄﾞ-  
-`<prefix> fd <sentence>` : ご飯を上げます   
-`<prefix> st` : 自分のアイのステータスを確認します  
-`<prefix> ad` : ランダムなplayerに勝負をかけます  
-`<prefix> save` : 自分のアイのデータの保存コードを表示します\n" +
-`<prefix> load <コード>` : 自分のアイのデータの保存コードから読み込みます\n" +
+`<prefix> <単語> fd` : 自分のアイにごはんを上げます\n"
+`<prefix> lesson` : 自分のアイがじゅぎょーをうけ\n"
+`<prefix> state` : 自分のアイのすてーたすを確認します\n"
+`<prefix> load <コード>` : 自分のアイのデータの保存コードから読み込みます\n"
+> *help以外のコマンドは\"アイ育成\"を含む名前のチャンネルでのみ反応します
 ## コード元:  
 Bot API Code   : https://github.com/bwmarrin/discordgo  
 Bot Language   : https://golang.org/  
