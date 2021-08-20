@@ -314,10 +314,10 @@ func goLesson(userID string, message string, discord *discordgo.Session, channel
 			}
 
 			switch selectStateUp {
-			//かわいいせんせい
+			//きてぃせんせい
 			case 1:
 				user.cutePoint = user.cutePoint + stateUp
-				embedText = "**" + user.name + "**は かわいい せんせいにあうことができた!\n" +
+				embedText = "**" + user.name + "**は きてぃ せんせいにあうことができた!\n" +
 					"かわいさが" + strconv.Itoa(user.cutePoint) + "(+" + strconv.Itoa(stateUp) + ")になった\n"
 				//ぐーぐるせんせい
 			case 2:
@@ -349,7 +349,7 @@ func goLesson(userID string, message string, discord *discordgo.Session, channel
 				start := (strings.Index(fromReplace, alpha) + count) % len(fromArray)
 				sendCode = sendCode + toArray[start]
 			}
-			embedText = embedText + "\nSaveCode:**" + sendCode + "**\n" +
+			embedText = embedText + "\n||```SaveCode:\n" + sendCode + "```||\n" +
 				"一人一人違うからね!"
 			sendEmbed(discord, channelID, embedText)
 			return
