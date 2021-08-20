@@ -349,8 +349,8 @@ func goLesson(userID string, message string, discord *discordgo.Session, channel
 				start := (strings.Index(fromReplace, alpha) + count) % len(fromArray)
 				sendCode = sendCode + toArray[start]
 			}
-			embedText = embedText + "\n||```SaveCode:\n" + sendCode + "```||\n" +
-				"一人一人違うからね!"
+			embedText = embedText + "\n||SaveCode:\n**" + sendCode + "**||\n" +
+				"コードは毎回変わるからね!"
 			sendEmbed(discord, channelID, embedText)
 			return
 		}
