@@ -466,11 +466,11 @@ func goOut(userID string, discord *discordgo.Session, channelID string) {
 				//少しごまかして移す
 				playerData.userID = ""
 				playerData.name = "????"
-				playerData.staminaPoint = user.staminaPoint + randomaizer(200)
-				playerData.cutePoint = user.cutePoint + randomaizer(200)
-				playerData.intellPoint = user.intellPoint + randomaizer(200)
-				playerData.debufPoint = user.debufPoint + randomaizer(200)
-				playerData.speedPoint = user.speedPoint + randomaizer(200)
+				playerData.staminaPoint = user.staminaPoint + randomaizer(200) - 100
+				playerData.cutePoint = user.cutePoint + randomaizer(200) - 100
+				playerData.intellPoint = user.intellPoint + randomaizer(200) - 100
+				playerData.debufPoint = user.debufPoint + randomaizer(200) - 100
+				playerData.speedPoint = user.speedPoint + randomaizer(200) - 100
 
 			}
 		}
