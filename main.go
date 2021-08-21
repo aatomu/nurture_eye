@@ -153,6 +153,11 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 			userDataLoad(authorID, message, discord, channelID)
 		}
 		return
+	case isPrefix(message, "fr"):
+		if isBotChannel(channelName) || channelData.Type == 1 {
+			goOut(authorID, discord, channelID)
+		}
+		return
 	case isPrefix(message, "help"):
 		sendHelp(discord, channelID)
 		return
@@ -390,7 +395,7 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 	//軽く確認
 	if strings.Count(flatUserData, " ") == 7 && strings.HasPrefix(flatUserData, userID+" ") {
 		//一時保存用
-		dummyUserData := generateUserData("null")
+		dummyUserData := generateUserData("")
 
 		//整形
 		_, err := fmt.Sscanf(flatUserData, "%s %s %d %d %d %d %d ", &dummyUserData.userID, &dummyUserData.name, &dummyUserData.staminaPoint, &dummyUserData.cutePoint, &dummyUserData.intellPoint, &dummyUserData.debufPoint, &dummyUserData.speedPoint)
@@ -433,12 +438,139 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 	sendEmbed(discord, channelID, embedText)
 }
 
+func goOut(userID string, discord *discordgo.Session, channelID string) {
+	//相手のユーザーデータ
+	userCount := len(usersData)
+	userNumber := randomaizer(userCount)
+	log.Println(fmt.Sprint(userNumber))
+	numberCount := 0
+	playerData := generateUserData("")
+	//自分のユーザーデータ
+	userData := generateUserData("")
+
+	//探索
+	for _, user := range usersData {
+		numberCount++
+		//相手のユーザーデータを保存
+		if userNumber == numberCount {
+			if user.userID != userID {
+				//丸々移す
+				playerData.userID = user.userID
+				playerData.name = user.name
+				playerData.staminaPoint = user.staminaPoint
+				playerData.cutePoint = user.cutePoint
+				playerData.intellPoint = user.intellPoint
+				playerData.debufPoint = user.debufPoint
+				playerData.speedPoint = user.speedPoint
+			} else {
+				//少しごまかして移す
+				playerData.userID = ""
+				playerData.name = "????"
+				playerData.staminaPoint = user.staminaPoint + randomaizer(200)
+				playerData.cutePoint = user.cutePoint + randomaizer(200)
+				playerData.intellPoint = user.intellPoint + randomaizer(200)
+				playerData.debufPoint = user.debufPoint + randomaizer(200)
+				playerData.speedPoint = user.speedPoint + randomaizer(200)
+
+			}
+		}
+		if user.userID == userID {
+			//丸々移す
+			userData.userID = user.userID
+			userData.name = user.name
+			userData.staminaPoint = user.staminaPoint
+			userData.cutePoint = user.cutePoint
+			userData.intellPoint = user.intellPoint
+			userData.debufPoint = user.debufPoint
+			userData.speedPoint = user.speedPoint
+		}
+	}
+	//比較ステータス
+	comparisonState := randomaizer(5)
+
+	//表示用
+	playerDataByID, err := discord.User(playerData.userID)
+	playerName := ""
+	if err == nil {
+		playerName = playerDataByID.Username
+	} else {
+		playerName = "unknown"
+	}
+	embedText := "<@" + userData.userID + "> の **" + userData.name + "**は お出かけをした\n" +
+		"**" + userData.name + "** は @" + playerName + " の **" + playerData.name + "**とあった\n\n"
+	//比較
+	if userData.staminaPoint >= 10 {
+		switch comparisonState {
+		case 1:
+			//すたみなの比較
+			switch {
+			case userData.staminaPoint <= playerData.staminaPoint+50:
+				embedText = embedText + "**" + playerData.name + "** のほうが 元気そうだ\n"
+			case userData.staminaPoint >= playerData.staminaPoint-50:
+				embedText = embedText + "**" + playerData.name + "** のは 元気がなさそうだ\n"
+			default:
+				embedText = embedText + "**" + playerData.name + "** は 一緒に遊んでくれるらしい\n"
+			}
+		case 2:
+			//かわいさの比較
+			switch {
+			case userData.cutePoint <= playerData.cutePoint+30:
+				embedText = embedText + "**" + playerData.name + "** は とても可愛かった\n"
+			case userData.cutePoint >= playerData.cutePoint-30:
+				embedText = embedText + "**" + playerData.name + "** と お買い物に出かけた\n"
+			default:
+				embedText = embedText + "**" + playerData.name + "** と お揃いの物を持ってた\n"
+			}
+		case 3:
+			//かしこさの比較
+			switch {
+			case userData.intellPoint <= playerData.intellPoint+50:
+				embedText = embedText + "**" + playerData.name + "** は とっても賢そう\n"
+			case userData.intellPoint >= playerData.intellPoint-50:
+				embedText = embedText + "**" + playerData.name + "** の　勉強を手伝った\n"
+			default:
+				embedText = embedText + "**" + playerData.name + "** と 会話を楽しんだ\n"
+			}
+		case 4:
+			//でばふぱわーの比較
+			switch {
+			case userData.debufPoint <= playerData.debufPoint+70:
+				embedText = embedText + "**" + playerData.name + "** は とても強そう\n"
+			case userData.debufPoint >= playerData.debufPoint-70:
+				embedText = embedText + "**" + playerData.name + "** の　どくを教えた\n"
+			default:
+				embedText = embedText + "**" + playerData.name + "** と なかよくなれそう\n"
+			}
+		case 5:
+			//すばやさの比較
+			switch {
+			case userData.speedPoint <= playerData.speedPoint+100:
+				embedText = embedText + "**" + playerData.name + "** は 走るのが好きらしい\n"
+			case userData.speedPoint >= playerData.speedPoint-100:
+				embedText = embedText + "**" + playerData.name + "** に 驚いてにげちゃった\n"
+			default:
+				embedText = embedText + "**" + playerData.name + "** と 追いかけっこをした\n"
+			}
+		}
+		for _, user := range usersData {
+			if user.name == userID {
+				//スタミナを減らす
+				user.staminaPoint = user.staminaPoint - 10
+			}
+		}
+	} else {
+		embedText = embedText + "だけど すたみな がなくって すぐに家に帰った\n"
+	}
+	sendEmbed(discord, channelID, embedText)
+}
+
 func sendHelp(discord *discordgo.Session, channelID string) {
 	embedText := "Bot Help\n" +
 		*prefix + " fd <単語> : 自分のアイにごはんを上げます\n" +
 		*prefix + " lesson: 自分のアイがじゅぎょーをうけ\n" +
 		*prefix + " state : 自分のアイのすてーたすを確認します\n" +
 		*prefix + " load <コード>: 自分のアイのデータの保存コードから読み込みます\n" +
+		*prefix + " free : 自分のアイがお出かけします\n" +
 		"*help以外のコマンドは\"アイ育成\"を含む\n" +
 		"名前のチャンネルでのみ反応します\n"
 	sendEmbed(discord, channelID, embedText)
