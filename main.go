@@ -411,17 +411,24 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 		for _, user := range usersData {
 			if user.userID == dummyUserData.userID {
 				//丸々移す
-				user = dummyUserData
+				user.userID = dummyUserData.userID
+				user.name = dummyUserData.name
+				user.staminaPoint = dummyUserData.staminaPoint
+				user.cutePoint = dummyUserData.cutePoint
+				user.intellPoint = dummyUserData.intellPoint
+				user.debufPoint = dummyUserData.debufPoint
+				user.speedPoint = dummyUserData.speedPoint
 				shouldGenerateUserData = false
 				embedText = "<@" + user.userID + "> のアイのデータを読み込んだよ!\n" +
 					"<@" + user.userID + "> のアイ(**" + user.name + "**)は嬉しそうだ!"
+				log.Printf("%+v\n", usersData[0])
 			}
 		}
 		//UsersDataになかったら新しく追加
 		if shouldGenerateUserData {
-			dummyUserData.userID = userID
+			//dummyUserData.userID = userID
 			usersData = append(usersData, dummyUserData)
-			embedText = "<@" + dummyUserData.userID + "> のアイのデータを保存したよ!\n" +
+			embedText = "<@" + dummyUserData.userID + "> のアイのデータを追加したよ!\n" +
 				"<@" + dummyUserData.userID + "> のアイ(**" + dummyUserData.name + "**)は嬉しそうだ!"
 		}
 	} else {
@@ -477,3 +484,6 @@ func generateUserData(userID string) (userData *userItems) {
 		speedPoint:   1,
 	}
 }
+
+//6e364d90f2b1a5176e364d99ffb2a714673fd380c0860cd1e1cd2dc3d27bd227e82b7e5063e58c4c580da1e4fb2fac1771334ee4f5b25b116886
+//6e364d90f2b1a5176e364d99ffb2a714673fd380c0860cd1e1cd2dc3d27bd227e82b7e5063e58c4c580da1e4f92fa11171334ee4f5b25b116886
