@@ -418,6 +418,7 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 				user.intellPoint = dummyUserData.intellPoint
 				user.debufPoint = dummyUserData.debufPoint
 				user.speedPoint = dummyUserData.speedPoint
+				//新しいデータを追加しない
 				shouldGenerateUserData = false
 				embedText = "<@" + user.userID + "> のアイのデータを読み込んだよ!\n" +
 					"<@" + user.userID + "> のアイ(**" + user.name + "**)は嬉しそうだ!"
@@ -484,6 +485,3 @@ func generateUserData(userID string) (userData *userItems) {
 		speedPoint:   1,
 	}
 }
-
-//6e364d90f2b1a5176e364d99ffb2a714673fd380c0860cd1e1cd2dc3d27bd227e82b7e5063e58c4c580da1e4fb2fac1771334ee4f5b25b116886
-//6e364d90f2b1a5176e364d99ffb2a714673fd380c0860cd1e1cd2dc3d27bd227e82b7e5063e58c4c580da1e4f92fa11171334ee4f5b25b116886
