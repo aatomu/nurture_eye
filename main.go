@@ -45,7 +45,7 @@ func main() {
 	flag.Parse()
 	fmt.Println("prefix       :", *prefix)
 	fmt.Println("token        :", *token)
-	fmt.Println("token        :", *toReplace)
+	fmt.Println("save key     :", *toReplace)
 	toArray = strings.Split(*toReplace, "")
 
 	//bot起動準備
