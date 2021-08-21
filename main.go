@@ -395,7 +395,7 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 	embedText := ""
 
 	//軽く確認
-	if strings.Count(flatUserData, " ") == 7 && strings.HasPrefix(flatUserData, userID+" ") {
+	if strings.Count(flatUserData, " ") == 7 && strings.HasPrefix(flatUserData, userID+" ") && strings.HasSuffix(flatUserData, " ") {
 		//一時保存用
 		dummyUserData := generateUserData("")
 
