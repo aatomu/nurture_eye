@@ -61,7 +61,7 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM+JJJJ` ` `` ` `` ``(JJJJMMMMMMMMMMMMM
 開発環境:rpi4(8gb) golang(go1.16.7 linux/arm64)  
   
 ## -起動-  
-```go run main.go -prefix=<prefix> -token=<bot token>```
+```go run main.go -prefix=<prefix> -token=<bot token> -key=<key>```
   
 ## -botｺﾏﾝﾄﾞ-  
 `<prefix> <単語> fd` : 自分のアイにごはんを上げます\n"
