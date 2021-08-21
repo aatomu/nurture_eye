@@ -26,8 +26,8 @@ var (
 	randomPercentage = 30
 	fromReplace      = "0123456789abcdef"
 	fromArray        = strings.Split(fromReplace, "")
-	toReplace        = "ac17683d4e90f2b5"
-	toArray          = strings.Split(toReplace, "")
+	toReplace        = flag.String("key", "", "bot token")
+	toArray          = []string{}
 )
 
 type userItems struct {
@@ -45,6 +45,8 @@ func main() {
 	flag.Parse()
 	fmt.Println("prefix       :", *prefix)
 	fmt.Println("token        :", *token)
+	fmt.Println("token        :", *toReplace)
+	toArray = strings.Split(*toReplace, "")
 
 	//bot起動準備
 	discord, err := discordgo.New()
@@ -379,7 +381,7 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 	//分割してずらす
 	for _, alpha := range strings.Split(saveCode, "") {
 		count++
-		start := strings.Index(toReplace, alpha) - count
+		start := strings.Index(*toReplace, alpha) - count
 		for i := 0; start < 0; i++ {
 			start = start + len(toArray)
 		}
