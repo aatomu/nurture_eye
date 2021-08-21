@@ -104,16 +104,27 @@ func botStateUpdate(discord *discordgo.Session) {
 func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	//一時変数
 	guildID := m.GuildID
-	guildData, _ := discord.Guild(guildID)
-	guild := guildData.Name
+	guildData, err := discord.Guild(guildID)
+	guildName := ""
+	if err == nil {
+		guildName = guildData.Name
+	} else {
+		guildName = "DirectMessage"
+	}
 	channelID := m.ChannelID
-	channel, _ := discord.Channel(channelID)
+	channelData, _ := discord.Channel(channelID)
+	channelName := ""
+	if channelData.Type == 1 {
+		channelName = "DM"
+	} else {
+		channelName = channelData.Name
+	}
 	message := m.Content
 	author := m.Author.Username
 	authorID := m.Author.ID
 
 	//表示
-	log.Print("Guild:\"" + guild + "\"  Channel:\"" + channel.Name + "\"  " + author + ": " + message)
+	log.Print("Guild:\"" + guildName + "\"  Channel:\"" + channelName + "\"  " + author + ": " + message)
 
 	//bot return
 	if m.Author.Bot {
@@ -123,27 +134,27 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
 	//分岐
 	case isPrefix(message, "fd "):
-		if isBotChannel(channel.Name) {
+		if isBotChannel(channelName) {
 			giveFood(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "name "):
-		if isBotChannel(channel.Name) {
+		if isBotChannel(channelName) {
 			changeName(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "le"):
-		if isBotChannel(channel.Name) {
+		if isBotChannel(channelName) {
 			goLesson(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "st"):
-		if isBotChannel(channel.Name) {
+		if isBotChannel(channelName) {
 			sendState(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "load "):
-		if isBotChannel(channel.Name) {
+		if isBotChannel(channelName) {
 			userDataLoad(authorID, message, discord, channelID)
 		}
 		return
@@ -158,7 +169,13 @@ func isPrefix(message, check string) bool {
 }
 
 func isBotChannel(channelName string) bool {
-	return strings.Contains(channelName, "アイ育成")
+	if strings.Contains(channelName, "アイ育成") {
+		return true
+	}
+	if strings.Contains(channelName, "DM") {
+		return true
+	}
+	return false
 }
 
 func giveFood(userID string, message string, discord *discordgo.Session, channelID string) {
