@@ -284,15 +284,9 @@ func sendState(userID string, message string, discord *discordgo.Session, channe
 }
 
 func goLesson(userID string, message string, discord *discordgo.Session, channelID string) {
-	//もし指定されていないならreturn
-	if !strings.HasPrefix(message, *prefix+" le") {
-		return
-	}
-
-	//UserData一覧
-	shouldGenerateUserData := true
 
 	//UsersDataにないか確認
+	shouldGenerateUserData := true
 	for _, user := range usersData {
 		if user.userID == userID {
 			shouldGenerateUserData = false
