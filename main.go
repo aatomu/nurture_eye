@@ -113,12 +113,7 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	channelID := m.ChannelID
 	channelData, _ := discord.Channel(channelID)
-	channelName := ""
-	if channelData.Type == 1 {
-		channelName = "DM"
-	} else {
-		channelName = channelData.Name
-	}
+	channelName := channelData.Name
 	message := m.Content
 	author := m.Author.Username
 	authorID := m.Author.ID
@@ -134,27 +129,27 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	switch {
 	//分岐
 	case isPrefix(message, "fd "):
-		if isBotChannel(channelName) {
+		if isBotChannel(channelName) || channelData.Type == 1 {
 			giveFood(authorID, message, discord, channelID)
 		}
 		return
-	case isPrefix(message, "name "):
+	case isPrefix(message, "name ") || channelData.Type == 1:
 		if isBotChannel(channelName) {
 			changeName(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "le"):
-		if isBotChannel(channelName) {
+		if isBotChannel(channelName) || channelData.Type == 1 {
 			goLesson(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "st"):
-		if isBotChannel(channelName) {
+		if isBotChannel(channelName) || channelData.Type == 1 {
 			sendState(authorID, message, discord, channelID)
 		}
 		return
 	case isPrefix(message, "load "):
-		if isBotChannel(channelName) {
+		if isBotChannel(channelName) || channelData.Type == 1 {
 			userDataLoad(authorID, message, discord, channelID)
 		}
 		return
@@ -169,13 +164,7 @@ func isPrefix(message, check string) bool {
 }
 
 func isBotChannel(channelName string) bool {
-	if strings.Contains(channelName, "アイ育成") {
-		return true
-	}
-	if strings.Contains(channelName, "DM") {
-		return true
-	}
-	return false
+	return strings.Contains(channelName, "アイ育成")
 }
 
 func giveFood(userID string, message string, discord *discordgo.Session, channelID string) {
