@@ -133,8 +133,8 @@ func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 			giveFood(authorID, message, discord, channelID)
 		}
 		return
-	case isPrefix(message, "name ") || channelData.Type == 1:
-		if isBotChannel(channelName) {
+	case isPrefix(message, "name "):
+		if isBotChannel(channelName) || channelData.Type == 1 {
 			changeName(authorID, message, discord, channelID)
 		}
 		return
