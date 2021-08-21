@@ -421,7 +421,6 @@ func userDataLoad(userID string, message string, discord *discordgo.Session, cha
 				shouldGenerateUserData = false
 				embedText = "<@" + user.userID + "> のアイのデータを読み込んだよ!\n" +
 					"<@" + user.userID + "> のアイ(**" + user.name + "**)は嬉しそうだ!"
-				log.Printf("%+v\n", usersData[0])
 			}
 		}
 		//UsersDataになかったら新しく追加
