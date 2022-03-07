@@ -20,7 +20,6 @@ var (
 	//変数定義
 	prefix           = flag.String("prefix", "", "call prefix")
 	token            = flag.String("token", "", "bot token")
-	clientID         = ""
 	foodList         = []string{"遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨", "遺骨"}
 	usersData        = []*userItems{}
 	randomPercentage = 30
@@ -49,13 +48,10 @@ func main() {
 	toArray = strings.Split(*toReplace, "")
 
 	//bot起動準備
-	discord, err := discordgo.New()
+	discord, err := discordgo.New("Bot " + *token)
 	if err != nil {
 		fmt.Println("Error logging")
 	}
-
-	//token入手
-	discord.Token = "Bot " + *token
 
 	//eventトリガー設定
 	discord.AddHandler(onReady)
@@ -82,15 +78,12 @@ func main() {
 
 //BOTの準備が終わったときにCall
 func onReady(discord *discordgo.Session, r *discordgo.Ready) {
-	clientID = discord.State.User.ID
 	//1秒に1回呼び出す
 	ticker := time.NewTicker(1 * time.Second)
 	go func() {
 		for {
-			select {
-			case <-ticker.C:
-				botStateUpdate(discord)
-			}
+			<-ticker.C
+			botStateUpdate(discord)
 		}
 	}()
 }

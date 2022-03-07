@@ -1,8 +1,11 @@
 module github.com/atomu21263/nurture_eye
 
-go 1.16
+go 1.17
+
+require github.com/bwmarrin/discordgo v0.24.0
 
 require (
-	github.com/bwmarrin/discordgo v0.23.2
-	golang.org/x/crypto v0.0.0-20181030102418-4d3f4d9ffa16
+	github.com/gorilla/websocket v1.4.2 // indirect
+	golang.org/x/crypto v0.0.0-20210421170649-83a5a9bb288b // indirect
+	golang.org/x/sys v0.0.0-20201119102817-f84b799fce68 // indirect
 )
