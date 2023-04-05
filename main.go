@@ -76,7 +76,7 @@ func main() {
 
 }
 
-//BOTの準備が終わったときにCall
+// BOTの準備が終わったときにCall
 func onReady(discord *discordgo.Session, r *discordgo.Ready) {
 	//1秒に1回呼び出す
 	ticker := time.NewTicker(1 * time.Second)
@@ -95,7 +95,7 @@ func botStateUpdate(discord *discordgo.Session) {
 	discord.UpdateGameStatus(0, state)
 }
 
-//メッセージが送られたときにCall
+// メッセージが送られたときにCall
 func onMessageCreate(discord *discordgo.Session, m *discordgo.MessageCreate) {
 	//一時変数
 	guildID := m.GuildID
@@ -570,7 +570,7 @@ func sendHelp(discord *discordgo.Session, channelID string) {
 	sendEmbed(discord, channelID, embedText)
 }
 
-//Embed送信
+// Embed送信
 func sendEmbed(discord *discordgo.Session, channelID string, text string) {
 	//embedのData作成
 	embed := &discordgo.MessageEmbed{
@@ -585,7 +585,7 @@ func sendEmbed(discord *discordgo.Session, channelID string, text string) {
 	}
 }
 
-//乱数入手用
+// 乱数入手用
 func randomaizer(limit int) (random int) {
 	//乱数のseed
 	rand.Seed(time.Now().UnixNano())
@@ -593,7 +593,7 @@ func randomaizer(limit int) (random int) {
 	return
 }
 
-//デフォルトユーザーデータ
+// デフォルトユーザーデータ
 func generateUserData(userID string) (userData *userItems) {
 	return &userItems{
 		userID:       userID,
