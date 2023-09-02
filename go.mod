@@ -1,4 +1,4 @@
-module github.com/atomu21263/nurture_eye
+module github.com/aatomu/nurture_eye
 
 go 1.17
 
